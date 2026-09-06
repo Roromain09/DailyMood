@@ -185,6 +185,23 @@ body::before {
 .auth-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .auth-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
+.auth-link {
+  display: block;
+  text-align: center;
+  margin-top: 0.85rem;
+  font-size: 12px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  width: 100%;
+}
+.auth-link:hover { color: var(--accent); }
+
 .auth-error {
   margin-top: 1rem;
   padding: 10px 13px;
@@ -208,6 +225,18 @@ body::before {
   display: none;
 }
 .auth-success.visible { display: block; }
+
+/* ── RESET PASSWORD SCREEN ── */
+.reset-screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+.reset-screen.visible { display: flex; }
 
 /* ── APP ── */
 .app {
@@ -481,10 +510,14 @@ body::before {
       <h1>Mon <em>Daily</em> mood</h1>
       <p>Ton journal de bien-être quotidien</p>
     </div>
-    <div class="auth-tabs">
+
+    <!-- Tabs: Connexion / Créer un compte / Mot de passe oublié (hidden tab) -->
+    <div class="auth-tabs" id="authTabsRow">
       <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Connexion</button>
       <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Créer un compte</button>
     </div>
+
+    <!-- CONNEXION -->
     <div id="authLoginForm">
       <div class="auth-field">
         <label>Adresse e-mail</label>
@@ -495,8 +528,11 @@ body::before {
         <input class="auth-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Se connecter</button>
+      <button class="auth-link" onclick="switchAuthTab('forgot')">Mot de passe oublié ?</button>
       <div class="auth-error" id="loginError"></div>
     </div>
+
+    <!-- INSCRIPTION -->
     <div id="authSignupForm" style="display:none">
       <div class="auth-field">
         <label>Adresse e-mail</label>
@@ -508,8 +544,44 @@ body::before {
       </div>
       <button class="auth-btn" id="signupBtn" onclick="handleSignup()">Créer mon compte</button>
       <div class="auth-error" id="signupError"></div>
-      <div class="auth-success" id="signupSuccess">Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.</div>
+      <div class="auth-success" id="signupSuccess">Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.</div>
     </div>
+
+    <!-- MOT DE PASSE OUBLIÉ -->
+    <div id="authForgotForm" style="display:none">
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:1.25rem;line-height:1.6">
+        Saisis ton adresse e-mail et on t'envoie un lien pour réinitialiser ton mot de passe.
+      </p>
+      <div class="auth-field">
+        <label>Adresse e-mail</label>
+        <input class="auth-input" type="email" id="forgotEmail" placeholder="toi@exemple.com" autocomplete="email">
+      </div>
+      <button class="auth-btn" id="forgotBtn" onclick="handleForgotPassword()">Envoyer le lien</button>
+      <button class="auth-link" onclick="switchAuthTab('login')">← Retour à la connexion</button>
+      <div class="auth-error" id="forgotError"></div>
+      <div class="auth-success" id="forgotSuccess">Lien envoyé ! Vérifie ta boîte mail (et tes spams).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESET PASSWORD SCREEN ── -->
+<div class="reset-screen" id="resetScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>Mon <em>Daily</em> mood</h1>
+      <p>Nouveau mot de passe</p>
+    </div>
+    <div class="auth-field">
+      <label>Nouveau mot de passe</label>
+      <input class="auth-input" type="password" id="resetPassword" placeholder="8 caractères minimum" autocomplete="new-password">
+    </div>
+    <div class="auth-field">
+      <label>Confirmer le mot de passe</label>
+      <input class="auth-input" type="password" id="resetPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="auth-btn" id="resetBtn" onclick="handleResetPassword()">Enregistrer le nouveau mot de passe</button>
+    <div class="auth-error" id="resetError"></div>
+    <div class="auth-success" id="resetSuccess" style="display:none">Mot de passe modifié ! Tu peux te connecter.</div>
   </div>
 </div>
 
@@ -547,19 +619,24 @@ body::before {
 
 <script>
 // ─────────────────────────────────────────────
-// CONFIG — remplacez par vos vraies valeurs
+// CONFIG
 // ─────────────────────────────────────────────
-// SUPABASE_URL et SUPABASE_ANON_KEY sont utilisés uniquement côté client
-// pour l'authentification (signIn / signUp).
-// Le serveur Node.js utilise la SERVICE_ROLE_KEY pour accéder aux données.
-const SUPABASE_URL = 'https://hjvlwzcvstniapdrzajq.supabase.co';       // ex: https://abcdef.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdmx3emN2c3RuaWFwZHJ6YWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MDkyNTIsImV4cCI6MjEwNDE4NTI1Mn0.c3xoY8aAeu8IdRy8iBIPspbkEkjMgWzGCiU2JJCFMao'; // clé anon publique
+const SUPABASE_URL = 'https://hjvlwzcvstniapdrzajq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdmx3emN2c3RuaWFwZHJ6YWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MDkyNTIsImV4cCI6MjEwNDE4NTI1Mn0.c3xoY8aAeu8IdRy8iBIPspbkEkjMgWzGCiU2JJCFMao';
+
+// URL de l'app : utilisée comme redirectTo dans les emails Supabase
+// Supabase redirigera vers cette URL + le hash contenant le token
+function getAppUrl() {
+  return window.location.origin + window.location.pathname.replace(/\/$/, '');
+}
 
 // ─────────────────────────────────────────────
 // AUTH STATE
 // ─────────────────────────────────────────────
-let authToken = null;  // JWT Supabase stocké en mémoire (+ localStorage backup)
+let authToken = null;
 let authUser = null;
+// Token de reset capté depuis le hash de l'URL (flux recovery)
+let resetAccessToken = null;
 
 const TOKEN_KEY = 'dm_token';
 const REFRESH_KEY = 'dm_refresh';
@@ -587,15 +664,12 @@ function getSavedRefresh() {
 }
 
 // ─────────────────────────────────────────────
-// SUPABASE AUTH CALLS (direct REST, pas de SDK)
+// SUPABASE AUTH CALLS
 // ─────────────────────────────────────────────
 async function supabaseAuth(endpoint, body) {
   const r = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-    },
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
     body: JSON.stringify(body),
   });
   return r.json();
@@ -606,7 +680,33 @@ async function signIn(email, password) {
 }
 
 async function signUp(email, password) {
-  return supabaseAuth('signup', { email, password });
+  // redirectTo : Supabase inclura cette URL dans le lien de confirmation
+  return supabaseAuth('signup', { email, password, options: { emailRedirectTo: getAppUrl() } });
+}
+
+async function sendPasswordReset(email) {
+  // Supabase enverra un email avec un lien contenant le token de reset
+  // Ce lien redirigera vers getAppUrl() avec le hash #access_token=...&type=recovery
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify({ email, options: { redirectTo: getAppUrl() } }),
+  });
+  return r;
+}
+
+async function updatePassword(newPassword, token) {
+  // On utilise le token de recovery pour mettre à jour le mot de passe
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  return r.json();
 }
 
 async function refreshToken(refresh) {
@@ -621,13 +721,38 @@ async function signOut(token) {
 }
 
 // ─────────────────────────────────────────────
+// PARSE HASH : capte le token dans l'URL après redirection Supabase
+// Ex: /#access_token=XXX&type=recovery
+//     /#access_token=XXX&type=signup
+// ─────────────────────────────────────────────
+function parseHashParams() {
+  const hash = window.location.hash.slice(1); // retire le #
+  if (!hash) return null;
+  const params = {};
+  hash.split('&').forEach(part => {
+    const [k, v] = part.split('=');
+    if (k && v) params[decodeURIComponent(k)] = decodeURIComponent(v);
+  });
+  return params;
+}
+
+function clearHash() {
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
+// ─────────────────────────────────────────────
 // AUTH UI
 // ─────────────────────────────────────────────
 function switchAuthTab(tab) {
+  // Tabs visibles uniquement pour login/signup
+  const tabsRow = document.getElementById('authTabsRow');
+  tabsRow.style.display = (tab === 'forgot') ? 'none' : '';
+
   document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
   document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
   document.getElementById('authLoginForm').style.display = tab === 'login' ? '' : 'none';
   document.getElementById('authSignupForm').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('authForgotForm').style.display = tab === 'forgot' ? '' : 'none';
 }
 
 async function handleLogin() {
@@ -666,16 +791,63 @@ async function handleSignup() {
     errEl.classList.add('visible');
     return;
   }
-  // Si email confirmation requis
   if (data.id && !data.access_token) {
     successEl.classList.add('visible');
     return;
   }
-  // Connexion directe si pas de confirmation requise
   if (data.access_token) {
     saveSession(data.access_token, data.refresh_token);
     await bootApp();
   }
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const errEl = document.getElementById('forgotError');
+  const successEl = document.getElementById('forgotSuccess');
+  const btn = document.getElementById('forgotBtn');
+  errEl.classList.remove('visible'); successEl.classList.remove('visible');
+  if (!email) { errEl.textContent = 'Saisis ton adresse e-mail.'; errEl.classList.add('visible'); return; }
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try {
+    const r = await sendPasswordReset(email);
+    // Supabase retourne 200 même si l'email n'existe pas (sécurité)
+    successEl.classList.add('visible');
+  } catch {
+    errEl.textContent = 'Une erreur est survenue. Réessaie.';
+    errEl.classList.add('visible');
+  }
+  btn.disabled = false; btn.textContent = 'Envoyer le lien';
+}
+
+async function handleResetPassword() {
+  const pwd = document.getElementById('resetPassword').value;
+  const pwd2 = document.getElementById('resetPasswordConfirm').value;
+  const errEl = document.getElementById('resetError');
+  const successEl = document.getElementById('resetSuccess');
+  const btn = document.getElementById('resetBtn');
+  errEl.classList.remove('visible'); successEl.classList.remove('visible');
+  if (!pwd || !pwd2) { errEl.textContent = 'Remplis les deux champs.'; errEl.classList.add('visible'); return; }
+  if (pwd.length < 8) { errEl.textContent = 'Le mot de passe doit faire 8 caractères minimum.'; errEl.classList.add('visible'); return; }
+  if (pwd !== pwd2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.classList.add('visible'); return; }
+  if (!resetAccessToken) { errEl.textContent = 'Lien de réinitialisation invalide ou expiré.'; errEl.classList.add('visible'); return; }
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const data = await updatePassword(pwd, resetAccessToken).catch(() => null);
+  btn.disabled = false; btn.textContent = 'Enregistrer le nouveau mot de passe';
+  if (!data || data.error) {
+    errEl.textContent = data?.msg || 'Erreur lors de la mise à jour. Le lien est peut-être expiré.';
+    errEl.classList.add('visible');
+    return;
+  }
+  successEl.classList.remove('hidden');
+  successEl.style.display = 'block';
+  btn.disabled = true;
+  // Redirige vers la connexion après 2 secondes
+  setTimeout(() => {
+    resetAccessToken = null;
+    showAuthScreen();
+    switchAuthTab('login');
+  }, 2500);
 }
 
 async function handleLogout() {
@@ -687,29 +859,33 @@ async function handleLogout() {
 
 function showAuthScreen() {
   document.getElementById('authScreen').classList.add('visible');
+  document.getElementById('resetScreen').classList.remove('visible');
+  document.getElementById('appShell').classList.remove('visible');
+}
+
+function showResetScreen() {
+  document.getElementById('authScreen').classList.remove('visible');
+  document.getElementById('resetScreen').classList.add('visible');
   document.getElementById('appShell').classList.remove('visible');
 }
 
 function showAppShell() {
   document.getElementById('authScreen').classList.remove('visible');
+  document.getElementById('resetScreen').classList.remove('visible');
   document.getElementById('appShell').classList.add('visible');
 }
 
 // ─────────────────────────────────────────────
-// API CALLS (vers notre serveur Node.js)
+// API CALLS
 // ─────────────────────────────────────────────
 async function apiFetch(method, path_, body) {
   const opts = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
   };
   if (body !== undefined) opts.body = JSON.stringify(body);
   const r = await fetch(path_, opts);
   if (r.status === 401) {
-    // Tentative refresh
     const refreshed = await tryRefreshToken();
     if (!refreshed) { handleLogout(); throw new Error('Session expirée'); }
     opts.headers['Authorization'] = `Bearer ${authToken}`;
@@ -1135,20 +1311,45 @@ async function bootApp() {
 }
 
 async function init() {
-  // Tentative de restauration de session depuis localStorage
+  // 1. Vérifier si on revient d'un lien Supabase (reset mdp ou confirmation email)
+  const hashParams = parseHashParams();
+  if (hashParams && hashParams.access_token) {
+    const type = hashParams.type; // 'recovery' ou 'signup' ou 'magiclink'
+    clearHash(); // Nettoie l'URL
+
+    if (type === 'recovery') {
+      // Flux reset mot de passe : afficher l'écran de nouveau mdp
+      resetAccessToken = hashParams.access_token;
+      showResetScreen();
+      return;
+    }
+
+    if (type === 'signup' || type === 'email') {
+      // Email confirmé : on connecte directement avec le token
+      saveSession(hashParams.access_token, hashParams.refresh_token || null);
+      await bootApp();
+      return;
+    }
+
+    // Cas générique : on tente de s'authentifier avec le token
+    saveSession(hashParams.access_token, hashParams.refresh_token || null);
+    await bootApp();
+    return;
+  }
+
+  // 2. Tentative de restauration de session depuis localStorage
   const savedToken = getSavedToken();
   if (savedToken) {
     authToken = savedToken;
-    // Vérification silencieuse via refresh si besoin
     try {
       await bootApp();
       return;
     } catch {
-      // Token expiré → on essaie le refresh
       const refreshed = await tryRefreshToken();
       if (refreshed) { await bootApp(); return; }
     }
   }
+
   showAuthScreen();
 }
 
@@ -1157,6 +1358,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const loginForm = document.getElementById('authLoginForm');
     if (loginForm && loginForm.style.display !== 'none' && document.activeElement?.closest('#authLoginForm')) handleLogin();
+    const forgotForm = document.getElementById('authForgotForm');
+    if (forgotForm && forgotForm.style.display !== 'none' && document.activeElement?.closest('#authForgotForm')) handleForgotPassword();
+    const resetPwd = document.getElementById('resetPassword');
+    if (resetPwd && document.getElementById('resetScreen').classList.contains('visible') && document.activeElement?.closest('#resetScreen')) handleResetPassword();
   }
 });
 
