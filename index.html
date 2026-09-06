@@ -303,6 +303,8 @@ body::before {
   transition: all 0.2s;
 }
 .logout-btn:hover { border-color: var(--ink-faint); color: var(--ink); background: var(--paper-warm); }
+.delete-account-btn { padding: 6px 10px; color: var(--ink-faint); }
+.delete-account-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
 
 /* ── NAV ── */
 .nav-tabs { display: flex; gap: 3px; background: var(--paper-warm); border: 1px solid var(--paper-line); border-radius: 12px; padding: 4px; margin-bottom: 2rem; }
@@ -589,6 +591,7 @@ body::before {
 <div class="app" id="appShell">
   <div class="header">
     <div class="header-actions">
+      <button class="logout-btn delete-account-btn" onclick="openDeleteModal()" title="Supprimer mon compte">🗑</button>
       <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
     </div>
     <div class="date-badge" id="todayLabel"></div>
@@ -609,6 +612,29 @@ body::before {
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── DELETE ACCOUNT MODAL ── -->
+<div class="modal-overlay" id="deleteModalOverlay" onclick="closeDeleteModal(event)">
+  <div class="modal-box" id="deleteModalBox">
+    <button class="modal-close" onclick="closeDeleteModalDirect()">×</button>
+    <div style="text-align:center;margin-bottom:1.25rem">
+      <span style="font-size:44px">⚠️</span>
+    </div>
+    <div style="font-family:'Lora',serif;font-size:19px;font-weight:400;margin-bottom:0.6rem;color:var(--red)">Supprimer mon compte</div>
+    <p style="font-size:13px;color:var(--ink-muted);line-height:1.65;margin-bottom:1.25rem">
+      Cette action est <strong>irréversible</strong>. Toutes tes entrées et ton compte seront définitivement supprimés.
+    </p>
+    <div style="background:var(--red-light);border:1px solid rgba(155,46,46,0.2);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;font-size:13px;color:var(--red)">
+      Pour confirmer, tape <strong>SUPPRIMER</strong> ci-dessous.
+    </div>
+    <input class="auth-input" type="text" id="deleteConfirmInput" placeholder="SUPPRIMER" autocomplete="off" oninput="onDeleteInputChange()">
+    <button class="auth-btn" id="deleteConfirmBtn" onclick="handleDeleteAccount()" disabled
+      style="background:var(--red);margin-top:0.75rem;opacity:0.35">
+      Supprimer définitivement
+    </button>
+    <div class="auth-error" id="deleteError" style="margin-top:0.75rem"></div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal-box" id="modalBox">
@@ -855,6 +881,54 @@ async function handleLogout() {
   clearSession();
   db = [];
   showAuthScreen();
+}
+
+// ── DELETE ACCOUNT ──
+function openDeleteModal() {
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+  document.getElementById('deleteConfirmBtn').style.opacity = '0.35';
+  document.getElementById('deleteError').classList.remove('visible');
+  document.getElementById('deleteModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('deleteConfirmInput').focus(), 100);
+}
+
+function onDeleteInputChange() {
+  const val = document.getElementById('deleteConfirmInput').value;
+  const ok = val === 'SUPPRIMER';
+  document.getElementById('deleteConfirmBtn').disabled = !ok;
+  document.getElementById('deleteConfirmBtn').style.opacity = ok ? '1' : '0.35';
+}
+
+function closeDeleteModal(e) {
+  if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModalDirect();
+}
+function closeDeleteModalDirect() {
+  document.getElementById('deleteModalOverlay').classList.remove('open');
+}
+
+async function handleDeleteAccount() {
+  const btn = document.getElementById('deleteConfirmBtn');
+  const errEl = document.getElementById('deleteError');
+  errEl.classList.remove('visible');
+  btn.disabled = true;
+  btn.textContent = 'Suppression…';
+  try {
+    const r = await apiFetch('DELETE', '/api/account');
+    if (r && r.error) throw new Error(r.error);
+    // Succès : déconnexion locale et retour à l'écran d'auth
+    clearSession();
+    db = [];
+    closeDeleteModalDirect();
+    showAuthScreen();
+    showToast('✓ Compte supprimé.');
+  } catch (err) {
+    errEl.textContent = err?.message || 'Une erreur est survenue. Réessaie.';
+    errEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Supprimer définitivement';
+    btn.style.opacity = '1';
+  }
 }
 
 function showAuthScreen() {
@@ -1354,7 +1428,7 @@ async function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModalDirect();
+  if (e.key === 'Escape') { closeModalDirect(); closeDeleteModalDirect(); }
   if (e.key === 'Enter') {
     const loginForm = document.getElementById('authLoginForm');
     if (loginForm && loginForm.style.display !== 'none' && document.activeElement?.closest('#authLoginForm')) handleLogin();
