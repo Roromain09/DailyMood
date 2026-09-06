@@ -514,6 +514,9 @@ body::before {
 }
 .import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
 .import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+.period-tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+.period-tab { padding: 5px 12px; border: 1.5px solid var(--paper-line); border-radius: 20px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; }
+.period-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 </style>
 </head>
 <body>
@@ -1193,6 +1196,165 @@ function calcWeekTrend() {
   return { avg1: avg(s1), avg2: avg(s2), s1count: s1.length, s2count: s2.length };
 }
 
+// ─── STATS ───
+function getLast30Keys() {
+  const days = []; const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    days.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
+  }
+  return days;
+}
+
+function calcStreak() {
+  let streak = 0; const today = new Date();
+  for (let i = 0; i < 1000; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    if (getEntry(key)) streak++; else break;
+  }
+  return streak;
+}
+
+let moodChartInstance = null;
+let moodChartPeriod = 30;
+
+function getLastNKeys(n) {
+  const days = []; const today = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    days.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
+  }
+  return days;
+}
+
+function renderMoodChart(period) {
+  moodChartPeriod = period;
+  document.querySelectorAll('.period-tab').forEach(b => b.classList.toggle('active', +b.dataset.period === period));
+
+  const keys = getLastNKeys(period);
+  
+  // Valeurs : 2 = bonne, 1 = neutre, 0 = mauvaise, null = pas de données
+  const values = keys.map(k => {
+    const e = getEntry(k);
+    if (!e) return null;
+    return e.good === true ? 2 : e.good === null ? 1 : 0;
+  });
+
+  // Labels allégés selon la période
+  const labels = keys.map((k, i) => {
+    const [y, m, d] = k.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    if (period <= 14) return dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (period <= 30) {
+      // 1 label tous les 5 jours
+      return i % 5 === 0 ? dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+    }
+    // 365 : 1 label tous les 30 jours
+    return i % 30 === 0 ? dt.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }) : '';
+  });
+
+  // Points non-null pour la courbe
+  const pointData = values.map((v, i) => v !== null ? v : null);
+
+  // Couleurs des points selon humeur
+  const pointColors = values.map(v => {
+    if (v === null) return 'transparent';
+    if (v === 2) return '#2a7a4f';
+    if (v === 1) return '#b09a68';
+    return '#9b2e2e';
+  });
+
+  // Segments colorés entre points (pour colorier la courbe par tranche)
+  const segmentColors = values.map((v, i) => {
+    if (v === null) return 'transparent';
+    if (v === 2) return '#52a876';
+    if (v === 1) return '#b09a68';
+    return '#c96060';
+  });
+
+  if (moodChartInstance) { moodChartInstance.destroy(); moodChartInstance = null; }
+
+  const ctx = document.getElementById('moodLineChart');
+  if (!ctx) return;
+
+  moodChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: pointData,
+        segment: {
+          borderColor: ctx2 => {
+            const i = ctx2.p0DataIndex;
+            return segmentColors[i] || '#888';
+          },
+        },
+        borderColor: '#888',
+        borderWidth: 2,
+        tension: 0.35,
+        spanGaps: true,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        pointRadius: period <= 14 ? 6 : period <= 30 ? 4 : 3,
+        pointHoverRadius: 7,
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => formatDate(keys[items[0].dataIndex], true),
+            label: item => {
+              const v = item.raw;
+              if (v === null) return 'Non renseigné';
+              const e = getEntry(keys[item.dataIndex]);
+              const label = v === 2 ? '☀️ Bonne journée' : v === 1 ? '🌤️ Journée neutre' : '🌧️ Journée difficile';
+              return e?.why ? label + ' — ' + e.why : label;
+            }
+          },
+          backgroundColor: '#1c1c2e',
+          titleColor: '#f8f6f2',
+          bodyColor: '#9090b0',
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: false,
+        }
+      },
+      scales: {
+        y: {
+          min: -0.3,
+          max: 2.3,
+          ticks: {
+            stepSize: 1,
+            callback: v => v === 2 ? '☀️' : v === 1 ? '🌤️' : v === 0 ? '🌧️' : '',
+            font: { size: 14 },
+            color: '#9090b0',
+          },
+          grid: { color: 'rgba(144,144,176,0.12)' },
+          border: { display: false },
+        },
+        x: {
+          ticks: {
+            color: '#9090b0',
+            font: { size: 10 },
+            maxRotation: 0,
+            autoSkip: false,
+          },
+          grid: { display: false },
+          border: { display: false },
+        }
+      },
+      interaction: { mode: 'index', intersect: false },
+    }
+  });
+}
+
 function renderStats() {
   const container = document.getElementById('stats-container');
   if (db.length === 0) {
@@ -1217,6 +1379,74 @@ function renderStats() {
     if (!e) return `<div class="bar-wrap"><div class="bar empty" style="height:14px"></div><div class="bar-label">${label}</div></div>`;
     return `<div class="bar-wrap"><div class="bar ${e.good===true?'good':e.good===false?'bad':'neutral'}" style="height:${e.good===true?72:e.good===null?56:40}px"></div><div class="bar-label">${label}</div></div>`;
   }).join('');
+
+  const withWhy = db.filter(e => e.why).slice(0,5);
+  const notesHTML = withWhy.length === 0
+    ? `<p style="color:var(--ink-faint);font-size:14px;font-style:italic">Aucune note pour l'instant.</p>`
+    : withWhy.map(e => `<div class="note-item"><span class="note-emoji">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</span><div><div class="note-date">${formatDate(e.date, true)}</div><div class="note-text">« ${escapeHtml(e.why)} »</div></div></div>`).join('');
+
+  const pctGood30 = total30>0?Math.round(good30/total30*100):0;
+  const pctNeutral30 = total30>0?Math.round(neutral30/total30*100):0;
+  const pctBad30 = total30>0?Math.round(bad30/total30*100):0;
+  const pctGoodAll = totalAll>0?Math.round(goodAll/totalAll*100):0;
+
+  container.innerHTML = `
+    ${streak>1?`<div class="streak-row"><div class="streak-badge">🔥 Série de ${streak} jour${streak>1?'s':''} consécutif${streak>1?'s':''}</div></div>`:''}
+
+    <div class="section-card">
+      <div class="section-title">Évolution de l'humeur</div>
+      <div class="period-tabs">
+        <button class="period-tab active" data-period="7" onclick="renderMoodChart(7)">7 j</button>
+        <button class="period-tab" data-period="14" onclick="renderMoodChart(14)">14 j</button>
+        <button class="period-tab" data-period="30" onclick="renderMoodChart(30)">30 j</button>
+        <button class="period-tab" data-period="365" onclick="renderMoodChart(365)">365 j</button>
+      </div>
+      <div style="position:relative;height:220px">
+        <canvas id="moodLineChart" role="img" aria-label="Courbe d'évolution de l'humeur"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--ink-faint);flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#2a7a4f;display:inline-block"></span> Bonne journée</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#b09a68;display:inline-block"></span> Neutre</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#9b2e2e;display:inline-block"></span> Difficile</span>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">30 derniers jours — ${total30} renseigné${total30>1?'s':''}</div>
+      <div class="stat-grid-3">
+        <div class="stat-mini"><div class="label">☀️ Bonnes</div><div class="val" style="color:var(--green)">${pctGood30}%</div><div class="sub">${good30} jour${good30>1?'s':''}</div></div>
+        <div class="stat-mini"><div class="label">🌤️ Neutres</div><div class="val" style="color:var(--neutral)">${pctNeutral30}%</div><div class="sub">${neutral30} jour${neutral30>1?'s':''}</div></div>
+        <div class="stat-mini"><div class="label">🌧️ Difficiles</div><div class="val" style="color:var(--red)">${pctBad30}%</div><div class="sub">${bad30} jour${bad30>1?'s':''}</div></div>
+      </div>
+      <div class="stat-grid-1">
+        <div class="stat-mini" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem">
+          <div><div class="label">Taux global de bonnes journées</div><div class="sub" style="margin-top:2px">${goodAll} ☀️ · ${neutralAll} 🌤️ · ${badAll} 🌧️ sur ${totalAll} jour${totalAll>1?'s':''}</div></div>
+          <div class="val" style="color:var(--accent);flex-shrink:0">${pctGoodAll}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Activité — 30 derniers jours</div>
+      <div class="bar-chart">${barHTML}</div>
+      <div class="legend">
+        <span><div class="legend-dot" style="background:var(--green-mid)"></div> Bonne</span>
+        <span><div class="legend-dot" style="background:var(--neutral-mid)"></div> Neutre</span>
+        <span><div class="legend-dot" style="background:var(--red-mid)"></div> Difficile</span>
+        <span><div class="legend-dot" style="background:var(--paper-line)"></div> Non renseigné</span>
+      </div>
+    </div>
+    <div class="section-card"><div class="section-title">Dernières notes</div>${notesHTML}</div>`;
+
+  // Charger Chart.js si besoin puis rendre le graphique
+  if (window.Chart) {
+    renderMoodChart(moodChartPeriod);
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+    s.onload = () => renderMoodChart(moodChartPeriod);
+    document.head.appendChild(s);
+  }
+}
 
   const withWhy = db.filter(e => e.why).slice(0,5);
   const notesHTML = withWhy.length === 0
