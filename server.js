@@ -46,6 +46,36 @@ function supabaseRequest(method, endpoint, body, extraHeaders = {}) {
   });
 }
 
+// Appel à l'API Admin Supabase (auth/v1/admin/*)
+function supabaseAdmin(method, adminPath, body) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(`${SUPABASE_URL}/auth/v1/admin/${adminPath}`);
+    const payload = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method,
+      headers: {
+        'apikey': SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    };
+    if (payload) options.headers['Content-Length'] = Buffer.byteLength(payload);
+    const req = https.request(options, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data || 'null') }); }
+        catch { resolve({ status: res.statusCode, body: data }); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
 function verifyToken(token) {
   return new Promise((resolve) => {
     const url = new URL(`${SUPABASE_URL}/auth/v1/user`);
@@ -161,6 +191,35 @@ async function handlePostEntry(req, res) {
   return send(res, 200, { ok: true });
 }
 
+// Supprime toutes les données de l'utilisateur puis son compte auth
+async function handleDeleteAccount(req, res) {
+  const token = extractToken(req);
+  if (!token) return send(res, 401, { error: 'Missing token' });
+  const userId = await verifyToken(token);
+  if (!userId) return send(res, 401, { error: 'Invalid token' });
+
+  // 1. Supprimer toutes les entrées de l'utilisateur
+  const delEntries = await supabaseRequest(
+    'DELETE',
+    `mood_entries?user_id=eq.${userId}`,
+    null,
+    { 'Prefer': 'return=minimal' },
+  );
+  if (delEntries.status >= 400) {
+    console.error('Failed to delete entries:', delEntries.body);
+    return send(res, 502, { error: 'Impossible de supprimer les données' });
+  }
+
+  // 2. Supprimer le compte via l'API Admin Supabase
+  const delUser = await supabaseAdmin('DELETE', `users/${userId}`);
+  if (delUser.status >= 400) {
+    console.error('Failed to delete user:', delUser.body);
+    return send(res, 502, { error: 'Impossible de supprimer le compte' });
+  }
+
+  return send(res, 200, { ok: true });
+}
+
 // ── SERVER ──
 const server = http.createServer(async (req, res) => {
   try {
@@ -174,6 +233,11 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/entries') {
       if (req.method === 'GET') return await handleGetEntries(req, res);
       if (req.method === 'POST') return await handlePostEntry(req, res);
+    }
+
+    // Suppression de compte + données
+    if (url.pathname === '/api/account' && req.method === 'DELETE') {
+      return await handleDeleteAccount(req, res);
     }
 
     if (url.pathname === '/health') return send(res, 200, { ok: true });
