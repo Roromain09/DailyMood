@@ -393,6 +393,12 @@ body::before {
 .note-date { font-size: 11px; color: var(--ink-faint); margin-bottom: 3px; }
 .note-text { font-size: 14px; color: var(--ink-muted); font-style: italic; line-height: 1.55; }
 
+/* ── PERIOD TABS ── */
+.period-tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+.period-tab { padding: 5px 12px; border: 1.5px solid var(--paper-line); border-radius: 20px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; }
+.period-tab:hover { border-color: var(--ink-faint); color: var(--ink); }
+.period-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
 /* ── CALENDAR ── */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .cal-month-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; color: var(--ink); text-transform: capitalize; }
@@ -458,24 +464,6 @@ body::before {
 .cl-dot.star-dot { background: var(--star-light); border: 1.5px solid var(--star-border) !important; position: relative; }
 .cl-dot.star-dot::after { content: '★'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6px; color: var(--star); }
 
-/* ── TREND ── */
-.trend-widget { display: flex; align-items: center; gap: 1.25rem; background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 8px var(--shadow); }
-@media (prefers-color-scheme: dark) { .trend-widget { background: var(--paper-warm); } }
-.trend-arrow-wrap { flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
-.trend-arrow-wrap.up { background: var(--green-light); color: var(--green); }
-.trend-arrow-wrap.down { background: var(--red-light); color: var(--red); }
-.trend-arrow-wrap.flat { background: var(--neutral-light); color: var(--neutral); }
-.trend-body { flex: 1; min-width: 0; }
-.trend-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
-.trend-verdict { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; line-height: 1.2; }
-.trend-verdict.up { color: var(--green); }
-.trend-verdict.down { color: var(--red); }
-.trend-verdict.flat { color: var(--neutral); }
-.trend-detail { font-size: 12px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5; }
-.trend-scores { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.trend-score-item { font-size: 11px; color: var(--ink-faint); display: flex; align-items: center; gap: 5px; }
-.trend-score-item .score-val { font-family: 'Lora', serif; font-size: 15px; color: var(--ink-muted); font-weight: 500; min-width: 24px; text-align: right; }
-
 /* ── MODAL ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(28,28,46,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -514,9 +502,6 @@ body::before {
 }
 .import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
 .import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
-.period-tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
-.period-tab { padding: 5px 12px; border: 1.5px solid var(--paper-line); border-radius: 20px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; }
-.period-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 </style>
 </head>
 <body>
@@ -529,7 +514,6 @@ body::before {
       <p>Ton journal de bien-être quotidien</p>
     </div>
 
-    <!-- Tabs: Connexion / Créer un compte / Mot de passe oublié (hidden tab) -->
     <div class="auth-tabs" id="authTabsRow">
       <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Connexion</button>
       <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Créer un compte</button>
@@ -668,8 +652,6 @@ body::before {
 const SUPABASE_URL = 'https://hjvlwzcvstniapdrzajq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdmx3emN2c3RuaWFwZHJ6YWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MDkyNTIsImV4cCI6MjEwNDE4NTI1Mn0.c3xoY8aAeu8IdRy8iBIPspbkEkjMgWzGCiU2JJCFMao';
 
-// URL de l'app : utilisée comme redirectTo dans les emails Supabase
-// Supabase redirigera vers cette URL + le hash contenant le token
 function getAppUrl() {
   return window.location.origin + window.location.pathname.replace(/\/$/, '');
 }
@@ -679,7 +661,6 @@ function getAppUrl() {
 // ─────────────────────────────────────────────
 let authToken = null;
 let authUser = null;
-// Token de reset capté depuis le hash de l'URL (flux recovery)
 let resetAccessToken = null;
 
 const TOKEN_KEY = 'dm_token';
@@ -724,13 +705,10 @@ async function signIn(email, password) {
 }
 
 async function signUp(email, password) {
-  // redirectTo : Supabase inclura cette URL dans le lien de confirmation
   return supabaseAuth('signup', { email, password, options: { emailRedirectTo: getAppUrl() } });
 }
 
 async function sendPasswordReset(email) {
-  // Supabase enverra un email avec un lien contenant le token de reset
-  // Ce lien redirigera vers getAppUrl() avec le hash #access_token=...&type=recovery
   const r = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
@@ -740,7 +718,6 @@ async function sendPasswordReset(email) {
 }
 
 async function updatePassword(newPassword, token) {
-  // On utilise le token de recovery pour mettre à jour le mot de passe
   const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     method: 'PUT',
     headers: {
@@ -765,12 +742,10 @@ async function signOut(token) {
 }
 
 // ─────────────────────────────────────────────
-// PARSE HASH : capte le token dans l'URL après redirection Supabase
-// Ex: /#access_token=XXX&type=recovery
-//     /#access_token=XXX&type=signup
+// PARSE HASH
 // ─────────────────────────────────────────────
 function parseHashParams() {
-  const hash = window.location.hash.slice(1); // retire le #
+  const hash = window.location.hash.slice(1);
   if (!hash) return null;
   const params = {};
   hash.split('&').forEach(part => {
@@ -788,10 +763,8 @@ function clearHash() {
 // AUTH UI
 // ─────────────────────────────────────────────
 function switchAuthTab(tab) {
-  // Tabs visibles uniquement pour login/signup
   const tabsRow = document.getElementById('authTabsRow');
   tabsRow.style.display = (tab === 'forgot') ? 'none' : '';
-
   document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
   document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
   document.getElementById('authLoginForm').style.display = tab === 'login' ? '' : 'none';
@@ -854,8 +827,7 @@ async function handleForgotPassword() {
   if (!email) { errEl.textContent = 'Saisis ton adresse e-mail.'; errEl.classList.add('visible'); return; }
   btn.disabled = true; btn.textContent = 'Envoi…';
   try {
-    const r = await sendPasswordReset(email);
-    // Supabase retourne 200 même si l'email n'existe pas (sécurité)
+    await sendPasswordReset(email);
     successEl.classList.add('visible');
   } catch {
     errEl.textContent = 'Une erreur est survenue. Réessaie.';
@@ -886,7 +858,6 @@ async function handleResetPassword() {
   successEl.classList.remove('hidden');
   successEl.style.display = 'block';
   btn.disabled = true;
-  // Redirige vers la connexion après 2 secondes
   setTimeout(() => {
     resetAccessToken = null;
     showAuthScreen();
@@ -934,7 +905,6 @@ async function handleDeleteAccount() {
   try {
     const r = await apiFetch('DELETE', '/api/account');
     if (r && r.error) throw new Error(r.error);
-    // Succès : déconnexion locale et retour à l'écran d'auth
     clearSession();
     db = [];
     closeDeleteModalDirect();
@@ -1177,45 +1147,6 @@ function calcStreak() {
   return streak;
 }
 
-function calcWeekTrend() {
-  const today = new Date();
-  function weekEntries(start, end) {
-    const entries = [];
-    for (let i = start; i <= end; i++) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const e = getEntry(key); if (e) entries.push(e);
-    }
-    return entries;
-  }
-  const s1 = weekEntries(1, 7), s2 = weekEntries(8, 14);
-  function avg(arr) {
-    if (!arr.length) return null;
-    return arr.reduce((acc, e) => acc + (e.good===true?2:e.good===null?1:0), 0) / arr.length;
-  }
-  return { avg1: avg(s1), avg2: avg(s2), s1count: s1.length, s2count: s2.length };
-}
-
-// ─── STATS ───
-function getLast30Keys() {
-  const days = []; const today = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today); d.setDate(today.getDate() - i);
-    days.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
-  }
-  return days;
-}
-
-function calcStreak() {
-  let streak = 0; const today = new Date();
-  for (let i = 0; i < 1000; i++) {
-    const d = new Date(today); d.setDate(today.getDate() - i);
-    const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    if (getEntry(key)) streak++; else break;
-  }
-  return streak;
-}
-
 let moodChartInstance = null;
 let moodChartPeriod = 30;
 
@@ -1233,31 +1164,21 @@ function renderMoodChart(period) {
   document.querySelectorAll('.period-tab').forEach(b => b.classList.toggle('active', +b.dataset.period === period));
 
   const keys = getLastNKeys(period);
-  
-  // Valeurs : 2 = bonne, 1 = neutre, 0 = mauvaise, null = pas de données
+
   const values = keys.map(k => {
     const e = getEntry(k);
     if (!e) return null;
     return e.good === true ? 2 : e.good === null ? 1 : 0;
   });
 
-  // Labels allégés selon la période
   const labels = keys.map((k, i) => {
     const [y, m, d] = k.split('-').map(Number);
     const dt = new Date(y, m - 1, d);
     if (period <= 14) return dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    if (period <= 30) {
-      // 1 label tous les 5 jours
-      return i % 5 === 0 ? dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
-    }
-    // 365 : 1 label tous les 30 jours
+    if (period <= 30) return i % 5 === 0 ? dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
     return i % 30 === 0 ? dt.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }) : '';
   });
 
-  // Points non-null pour la courbe
-  const pointData = values.map((v, i) => v !== null ? v : null);
-
-  // Couleurs des points selon humeur
   const pointColors = values.map(v => {
     if (v === null) return 'transparent';
     if (v === 2) return '#2a7a4f';
@@ -1265,9 +1186,8 @@ function renderMoodChart(period) {
     return '#9b2e2e';
   });
 
-  // Segments colorés entre points (pour colorier la courbe par tranche)
-  const segmentColors = values.map((v, i) => {
-    if (v === null) return 'transparent';
+  const segmentColors = values.map(v => {
+    if (v === null) return 'rgba(144,144,176,0.2)';
     if (v === 2) return '#52a876';
     if (v === 1) return '#b09a68';
     return '#c96060';
@@ -1283,21 +1203,18 @@ function renderMoodChart(period) {
     data: {
       labels,
       datasets: [{
-        data: pointData,
+        data: values,
         segment: {
-          borderColor: ctx2 => {
-            const i = ctx2.p0DataIndex;
-            return segmentColors[i] || '#888';
-          },
+          borderColor: ctx2 => segmentColors[ctx2.p0DataIndex] || 'rgba(144,144,176,0.3)',
         },
-        borderColor: '#888',
+        borderColor: '#9090b0',
         borderWidth: 2,
         tension: 0.35,
         spanGaps: true,
         pointBackgroundColor: pointColors,
-        pointBorderColor: '#fff',
+        pointBorderColor: '#ffffff',
         pointBorderWidth: 1.5,
-        pointRadius: period <= 14 ? 6 : period <= 30 ? 4 : 3,
+        pointRadius: period <= 14 ? 6 : period <= 30 ? 4 : 2.5,
         pointHoverRadius: 7,
         fill: false,
       }]
@@ -1315,7 +1232,7 @@ function renderMoodChart(period) {
               if (v === null) return 'Non renseigné';
               const e = getEntry(keys[item.dataIndex]);
               const label = v === 2 ? '☀️ Bonne journée' : v === 1 ? '🌤️ Journée neutre' : '🌧️ Journée difficile';
-              return e?.why ? label + ' — ' + e.why : label;
+              return e && e.why ? label + ' — ' + e.why : label;
             }
           },
           backgroundColor: '#1c1c2e',
@@ -1336,7 +1253,7 @@ function renderMoodChart(period) {
             font: { size: 14 },
             color: '#9090b0',
           },
-          grid: { color: 'rgba(144,144,176,0.12)' },
+          grid: { color: 'rgba(144,144,176,0.1)' },
           border: { display: false },
         },
         x: {
@@ -1402,12 +1319,13 @@ function renderStats() {
         <button class="period-tab" data-period="365" onclick="renderMoodChart(365)">365 j</button>
       </div>
       <div style="position:relative;height:220px">
-        <canvas id="moodLineChart" role="img" aria-label="Courbe d'évolution de l'humeur"></canvas>
+        <canvas id="moodLineChart" role="img" aria-label="Courbe d'évolution de l'humeur sur la période sélectionnée"></canvas>
       </div>
       <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--ink-faint);flex-wrap:wrap">
         <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#2a7a4f;display:inline-block"></span> Bonne journée</span>
         <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#b09a68;display:inline-block"></span> Neutre</span>
         <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#9b2e2e;display:inline-block"></span> Difficile</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--paper-line);display:inline-block"></span> Non renseigné</span>
       </div>
     </div>
 
@@ -1437,7 +1355,6 @@ function renderStats() {
     </div>
     <div class="section-card"><div class="section-title">Dernières notes</div>${notesHTML}</div>`;
 
-  // Charger Chart.js si besoin puis rendre le graphique
   if (window.Chart) {
     renderMoodChart(moodChartPeriod);
   } else {
@@ -1446,60 +1363,6 @@ function renderStats() {
     s.onload = () => renderMoodChart(moodChartPeriod);
     document.head.appendChild(s);
   }
-}
-
-  const withWhy = db.filter(e => e.why).slice(0,5);
-  const notesHTML = withWhy.length === 0
-    ? `<p style="color:var(--ink-faint);font-size:14px;font-style:italic">Aucune note pour l'instant.</p>`
-    : withWhy.map(e => `<div class="note-item"><span class="note-emoji">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</span><div><div class="note-date">${formatDate(e.date, true)}</div><div class="note-text">« ${escapeHtml(e.why)} »</div></div></div>`).join('');
-
-  const pctGood30 = total30>0?Math.round(good30/total30*100):0;
-  const pctNeutral30 = total30>0?Math.round(neutral30/total30*100):0;
-  const pctBad30 = total30>0?Math.round(bad30/total30*100):0;
-  const pctGoodAll = totalAll>0?Math.round(goodAll/totalAll*100):0;
-
-  const trend = calcWeekTrend();
-  let trendHTML = '';
-  if (trend.s1count === 0) {
-    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap flat">—</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict flat">Pas encore de données</div></div></div>`;
-  } else {
-    const diff = trend.avg2 !== null ? trend.avg1 - trend.avg2 : null;
-    let dir, arrow, verdictText, detailText;
-    if (diff === null) { dir='flat'; arrow='→'; verdictText='Première semaine'; detailText=`${trend.s1count} entrée${trend.s1count>1?'s':''} cette semaine.`; }
-    else if (diff >= 1) { dir='up'; arrow='↑'; verdictText='En amélioration'; detailText=`Moyenne en hausse de +${diff.toFixed(1)} pt.`; }
-    else if (diff <= -1) { dir='down'; arrow='↓'; verdictText='En baisse'; detailText=`Moyenne en baisse de ${Math.abs(diff).toFixed(1)} pt.`; }
-    else { dir='flat'; arrow='→'; verdictText='Stable'; detailText=`Variation de ${diff>0?'+':''}${diff.toFixed(1)} pt.`; }
-    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap ${dir}">${arrow}</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict ${dir}">${verdictText}</div><div class="trend-detail">${detailText}</div></div><div class="trend-scores"><div class="trend-score-item"><span>Cette semaine</span><span class="score-val">${trend.avg1.toFixed(1)}</span></div>${trend.avg2!==null?`<div class="trend-score-item"><span>Sem. préc.</span><span class="score-val">${trend.avg2.toFixed(1)}</span></div>`:''}</div></div>`;
-  }
-
-  container.innerHTML = `
-    ${streak>1?`<div class="streak-row"><div class="streak-badge">🔥 Série de ${streak} jour${streak>1?'s':''} consécutif${streak>1?'s':''}</div></div>`:''}
-    ${trendHTML}
-    <div class="section-card">
-      <div class="section-title">30 derniers jours — ${total30} renseigné${total30>1?'s':''}</div>
-      <div class="stat-grid-3">
-        <div class="stat-mini"><div class="label">☀️ Bonnes</div><div class="val" style="color:var(--green)">${pctGood30}%</div><div class="sub">${good30} jour${good30>1?'s':''}</div></div>
-        <div class="stat-mini"><div class="label">🌤️ Neutres</div><div class="val" style="color:var(--neutral)">${pctNeutral30}%</div><div class="sub">${neutral30} jour${neutral30>1?'s':''}</div></div>
-        <div class="stat-mini"><div class="label">🌧️ Difficiles</div><div class="val" style="color:var(--red)">${pctBad30}%</div><div class="sub">${bad30} jour${bad30>1?'s':''}</div></div>
-      </div>
-      <div class="stat-grid-1">
-        <div class="stat-mini" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem">
-          <div><div class="label">Taux global de bonnes journées</div><div class="sub" style="margin-top:2px">${goodAll} ☀️ · ${neutralAll} 🌤️ · ${badAll} 🌧️ sur ${totalAll} jour${totalAll>1?'s':''}</div></div>
-          <div class="val" style="color:var(--accent);flex-shrink:0">${pctGoodAll}%</div>
-        </div>
-      </div>
-    </div>
-    <div class="section-card">
-      <div class="section-title">Activité — 30 derniers jours</div>
-      <div class="bar-chart">${barHTML}</div>
-      <div class="legend">
-        <span><div class="legend-dot" style="background:var(--green-mid)"></div> Bonne</span>
-        <span><div class="legend-dot" style="background:var(--neutral-mid)"></div> Neutre</span>
-        <span><div class="legend-dot" style="background:var(--red-mid)"></div> Difficile</span>
-        <span><div class="legend-dot" style="background:var(--paper-line)"></div> Non renseigné</span>
-      </div>
-    </div>
-    <div class="section-card"><div class="section-title">Dernières notes</div>${notesHTML}</div>`;
 }
 
 // ─── CALENDAR ───
@@ -1631,33 +1494,28 @@ async function bootApp() {
 }
 
 async function init() {
-  // 1. Vérifier si on revient d'un lien Supabase (reset mdp ou confirmation email)
   const hashParams = parseHashParams();
   if (hashParams && hashParams.access_token) {
-    const type = hashParams.type; // 'recovery' ou 'signup' ou 'magiclink'
-    clearHash(); // Nettoie l'URL
+    const type = hashParams.type;
+    clearHash();
 
     if (type === 'recovery') {
-      // Flux reset mot de passe : afficher l'écran de nouveau mdp
       resetAccessToken = hashParams.access_token;
       showResetScreen();
       return;
     }
 
     if (type === 'signup' || type === 'email') {
-      // Email confirmé : on connecte directement avec le token
       saveSession(hashParams.access_token, hashParams.refresh_token || null);
       await bootApp();
       return;
     }
 
-    // Cas générique : on tente de s'authentifier avec le token
     saveSession(hashParams.access_token, hashParams.refresh_token || null);
     await bootApp();
     return;
   }
 
-  // 2. Tentative de restauration de session depuis localStorage
   const savedToken = getSavedToken();
   if (savedToken) {
     authToken = savedToken;
@@ -1758,14 +1616,12 @@ async function processImportFile(file) {
       return;
     }
 
-    // Valider et normaliser les entrées
     const valid = entries.filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
     if (!valid.length) {
       showImportStatus('error', '❌ Aucune entrée valide trouvée (champ "date" manquant ou invalide).');
       return;
     }
 
-    // Séparer nouvelles entrées vs doublons
     const existingDates = new Set(db.map(e => e.date));
     const toImport = valid.filter(e => !existingDates.has(e.date));
     const skipped = valid.length - toImport.length;
@@ -1775,7 +1631,6 @@ async function processImportFile(file) {
       return;
     }
 
-    // Confirmation avant import
     showImportStatus('confirm', `
       <div style="font-size:14px;font-weight:500;margin-bottom:0.75rem">
         ${valid.length} entrée${valid.length>1?'s':''} trouvée${valid.length>1?'s':''} —
@@ -1836,21 +1691,18 @@ async function confirmImport() {
   }
 }
 
-// ── PARSER : détecte et décode les deux formats ──
+// ── PARSER ──
 function parseImportFile(text) {
   const trimmed = text.trim();
 
-  // Format 1 : JSON direct (export de cette app)
   if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
     try {
       const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) return parsed;
-      // Si c'est un objet {date: entry}, le convertir
       return Object.entries(parsed).map(([date, val]) => ({ date, ...val }));
     } catch {}
   }
 
-  // Format 2 : ancien format local chiffré (Base64 + XOR)
   try {
     const decoded = atob(trimmed);
     const bytes = new Uint8Array(decoded.length);
