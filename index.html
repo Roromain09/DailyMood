@@ -501,6 +501,19 @@ body::before {
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-faint); font-size: 15px; }
 .empty-state .big { font-size: 44px; margin-bottom: 1rem; }
 .loading-msg { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 14px; }
+
+/* ── SETTINGS / IMPORT ── */
+.import-drop-zone {
+  border: 2px dashed var(--paper-line);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--paper);
+}
+.import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+.import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
 </style>
 </head>
 <body>
@@ -600,15 +613,17 @@ body::before {
 
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
-    <button class="nav-tab" onclick="showPage('stats')">Statistiques</button>
+    <button class="nav-tab" onclick="showPage('stats')">Stats</button>
     <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
     <button class="nav-tab" onclick="showPage('history')">Historique</button>
+    <button class="nav-tab" onclick="showPage('settings')">⚙</button>
   </div>
 
   <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
   <div id="page-stats" class="page"><div id="stats-container"></div></div>
   <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
   <div id="page-history" class="page"><div id="history-container"></div></div>
+  <div id="page-settings" class="page"><div id="settings-container"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -995,7 +1010,7 @@ async function saveEntry(entry) {
 // ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
-const pages = ['daily','stats','calendar','history'];
+const pages = ['daily','stats','calendar','history','settings'];
 let editMode = false;
 let selectedAnswer = undefined;
 let selectedStar = false;
@@ -1048,6 +1063,7 @@ function showPage(name) {
   if (name==='stats') renderStats();
   if (name==='calendar') renderCalendar();
   if (name==='history') renderHistory();
+  if (name==='settings') renderSettings();
 }
 
 function renderDaily(key = todayKey()) {
@@ -1425,6 +1441,203 @@ async function init() {
   }
 
   showAuthScreen();
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS PAGE
+// ─────────────────────────────────────────────
+function renderSettings() {
+  const container = document.getElementById('settings-container');
+  container.innerHTML = `
+    <div class="section-card" style="margin-bottom:1rem">
+      <div class="section-title">Exporter mes données</div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:1.25rem">
+        Télécharge toutes tes entrées au format JSON. Tu pourras les réimporter ici à tout moment.
+      </p>
+      <button class="submit-btn" onclick="exportData()" style="max-width:240px">
+        ⬇ Exporter (JSON)
+      </button>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Importer des données</div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:1.25rem">
+        Importe un fichier JSON exporté depuis cette app <strong>ou</strong> depuis l'ancienne version locale.
+        Les entrées existantes ne seront pas écrasées si la date est déjà renseignée.
+      </p>
+      <label style="display:block;width:100%">
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="handleImportFile(event)">
+        <div class="import-drop-zone" id="importDropZone"
+          onclick="document.getElementById('importFileInput').click()"
+          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <div style="font-size:32px;margin-bottom:0.5rem">📂</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-muted)">Clique ou glisse un fichier JSON</div>
+          <div style="font-size:12px;color:var(--ink-faint);margin-top:4px">Format app ou format local chiffré</div>
+        </div>
+      </label>
+      <div id="importStatus" style="display:none;margin-top:1rem"></div>
+    </div>`;
+}
+
+// ── EXPORT ──
+function exportData() {
+  if (!db.length) { showToast('⚠ Aucune donnée à exporter'); return; }
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `dailymood-export-${today}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Export téléchargé !');
+}
+
+// ── IMPORT ──
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('importDropZone').classList.add('drag-over');
+}
+function onDragLeave() {
+  document.getElementById('importDropZone').classList.remove('drag-over');
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('importDropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processImportFile(file);
+}
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (file) processImportFile(file);
+  e.target.value = '';
+}
+
+async function processImportFile(file) {
+  const statusEl = document.getElementById('importStatus');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = `<div class="loading-msg" style="padding:0.5rem 0;text-align:left">Analyse du fichier…</div>`;
+
+  try {
+    const text = await file.text();
+    let entries = parseImportFile(text);
+
+    if (!entries || !entries.length) {
+      showImportStatus('error', '❌ Format non reconnu ou fichier vide.');
+      return;
+    }
+
+    // Valider et normaliser les entrées
+    const valid = entries.filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+    if (!valid.length) {
+      showImportStatus('error', '❌ Aucune entrée valide trouvée (champ "date" manquant ou invalide).');
+      return;
+    }
+
+    // Séparer nouvelles entrées vs doublons
+    const existingDates = new Set(db.map(e => e.date));
+    const toImport = valid.filter(e => !existingDates.has(e.date));
+    const skipped = valid.length - toImport.length;
+
+    if (!toImport.length) {
+      showImportStatus('warn', `⚠ ${valid.length} entrée${valid.length>1?'s':''} trouvée${valid.length>1?'s':''}, mais toutes existent déjà. Rien importé.`);
+      return;
+    }
+
+    // Confirmation avant import
+    showImportStatus('confirm', `
+      <div style="font-size:14px;font-weight:500;margin-bottom:0.75rem">
+        ${valid.length} entrée${valid.length>1?'s':''} trouvée${valid.length>1?'s':''} —
+        <strong style="color:var(--green)">${toImport.length} à importer</strong>${skipped ? `, <span style="color:var(--ink-faint)">${skipped} déjà présente${skipped>1?'s':''}</span>` : ''}.
+      </div>
+      <button class="submit-btn" onclick="confirmImport()" style="max-width:220px">Importer ${toImport.length} entrée${toImport.length>1?'s':''}</button>
+    `, toImport);
+
+  } catch (err) {
+    showImportStatus('error', '❌ Erreur lors de la lecture : ' + (err.message || err));
+  }
+}
+
+let _pendingImport = [];
+
+function showImportStatus(type, html, pending) {
+  if (pending) _pendingImport = pending;
+  const statusEl = document.getElementById('importStatus');
+  statusEl.style.display = 'block';
+  const bg = type === 'error' ? 'var(--red-light)' : type === 'warn' ? 'var(--gold-light)' : type === 'confirm' ? 'var(--green-light)' : 'var(--paper-warm)';
+  const border = type === 'error' ? 'rgba(155,46,46,0.2)' : type === 'warn' ? 'rgba(184,133,26,0.2)' : type === 'confirm' ? 'rgba(42,122,79,0.2)' : 'var(--paper-line)';
+  statusEl.innerHTML = `<div style="background:${bg};border:1px solid ${border};border-radius:10px;padding:12px 14px">${html}</div>`;
+}
+
+async function confirmImport() {
+  const toImport = _pendingImport;
+  if (!toImport.length) return;
+
+  showImportStatus('info', `<div class="loading-msg" style="padding:0;text-align:left">Import en cours… (${toImport.length} entrées)</div>`);
+
+  let ok = 0, fail = 0;
+  for (const entry of toImport) {
+    const record = {
+      date: entry.date,
+      good: entry.good !== undefined ? entry.good : null,
+      why: entry.why || '',
+      starred: !!entry.starred,
+      ts: entry.ts || Date.now(),
+    };
+    try {
+      await saveEntry(record);
+      const idx = db.findIndex(e => e.date === record.date);
+      if (idx >= 0) db[idx] = record; else db.push(record);
+      ok++;
+    } catch {
+      fail++;
+    }
+  }
+
+  db.sort((a, b) => b.date.localeCompare(a.date));
+  _pendingImport = [];
+
+  if (fail === 0) {
+    showImportStatus('confirm', `✅ ${ok} entrée${ok>1?'s':''} importée${ok>1?'s':''} avec succès !`);
+    showToast(`✓ ${ok} entrée${ok>1?'s':''} importée${ok>1?'s':''} !`);
+  } else {
+    showImportStatus('warn', `⚠ ${ok} importée${ok>1?'s':''}, ${fail} échouée${fail>1?'s':''}. Vérifie ta connexion.`);
+  }
+}
+
+// ── PARSER : détecte et décode les deux formats ──
+function parseImportFile(text) {
+  const trimmed = text.trim();
+
+  // Format 1 : JSON direct (export de cette app)
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+      // Si c'est un objet {date: entry}, le convertir
+      return Object.entries(parsed).map(([date, val]) => ({ date, ...val }));
+    } catch {}
+  }
+
+  // Format 2 : ancien format local chiffré (Base64 + XOR)
+  try {
+    const decoded = atob(trimmed);
+    const bytes = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i);
+
+    const key = 'dailymood-2026-xk9';
+    const decrypted = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+      decrypted[i] = bytes[i] ^ key.charCodeAt(i % key.length);
+    }
+
+    const jsonText = new TextDecoder('utf-8').decode(decrypted);
+    const parsed = JSON.parse(jsonText);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+
+  return null;
 }
 
 document.addEventListener('keydown', e => {
