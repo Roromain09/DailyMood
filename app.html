@@ -387,6 +387,18 @@ body::before {
 .cl-dot.star-dot { background: var(--star-light); border: 1.5px solid var(--star-border) !important; position: relative; }
 .cl-dot.star-dot::after { content: '★'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6px; color: var(--star); }
 
+/* ── MOOD CHART ── */
+.chart-period-row { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+.period-btn { flex: 1; padding: 7px 8px; border: 1.5px solid var(--paper-line); border-radius: 10px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; }
+.period-btn:hover:not(.active) { border-color: var(--ink-faint); color: var(--ink); }
+.period-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600; }
+.mood-chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mood-chart-empty { text-align: center; padding: 2rem 0.5rem; color: var(--ink-faint); font-size: 13px; font-style: italic; }
+.mood-chart-point { cursor: pointer; transition: r 0.15s; }
+.mood-chart-point:hover { r: 5.5; }
+.mood-chart-ylabels { display: flex; flex-direction: column; justify-content: space-between; }
+.mood-chart-summary { font-size: 12px; color: var(--ink-faint); margin-top: 10px; text-align: center; }
+
 /* ── TREND ── */
 .trend-widget { display: flex; align-items: center; gap: 1.25rem; background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 8px var(--shadow); }
 @media (prefers-color-scheme: dark) { .trend-widget { background: var(--paper-warm); } }
@@ -747,6 +759,7 @@ let selectedStar = false;
 let historyFilter = 'all';
 let calYear, calMonth;
 let currentDayKey = todayKey();
+let chartPeriod = 30;
 
 function pad(n) { return String(n).padStart(2,'0'); }
 function todayKey() {
@@ -894,6 +907,25 @@ function getLast30Keys() {
   return days;
 }
 
+function getLastNKeys(n) {
+  const days = []; const today = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    days.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
+  }
+  return days;
+}
+
+function moodScore(entry) {
+  if (!entry) return null;
+  return entry.good === true ? 2 : entry.good === null ? 1 : 0;
+}
+
+function moodColorVar(entry) {
+  if (!entry) return 'var(--ink-faint)';
+  return entry.good === true ? 'var(--green)' : entry.good === null ? 'var(--neutral)' : 'var(--red)';
+}
+
 function calcStreak() {
   let streak = 0; const today = new Date();
   for (let i = 0; i < 1000; i++) {
@@ -904,23 +936,102 @@ function calcStreak() {
   return streak;
 }
 
-function calcWeekTrend() {
-  const today = new Date();
-  function weekEntries(start, end) {
-    const entries = [];
-    for (let i = start; i <= end; i++) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const e = getEntry(key); if (e) entries.push(e);
+// ─── MOOD LINE CHART (7 / 14 / 30 / 365 jours) ───
+function setChartPeriod(period) {
+  chartPeriod = period;
+  const container = document.getElementById('moodChartContainer');
+  if (container) container.innerHTML = renderMoodChartSVG(period);
+  document.querySelectorAll('.period-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.period, 10) === period);
+  });
+}
+
+function renderMoodChartSVG(period) {
+  const keys = getLastNKeys(period);
+  const entries = keys.map(k => getEntry(k));
+  const known = entries.filter(Boolean);
+  if (known.length === 0) {
+    return `<div class="mood-chart-empty">Pas encore de données sur cette période.</div>`;
+  }
+
+  const W = 700, H = 220;
+  const padL = 34, padR = 12, padT = 14, padB = 26;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const n = keys.length;
+  const showDots = n <= 45;
+  const showLabels = n <= 31;
+
+  function xAt(i) { return n === 1 ? padL + innerW / 2 : padL + (i / (n - 1)) * innerW; }
+  function yAt(score) { return padT + (2 - score) / 2 * innerH; }
+
+  // build path segments, breaking at gaps (missing entries)
+  let segments = [];
+  let current = [];
+  entries.forEach((e, i) => {
+    const s = moodScore(e);
+    if (s === null) {
+      if (current.length) { segments.push(current); current = []; }
+    } else {
+      current.push({ x: xAt(i), y: yAt(s), score: s, key: keys[i], entry: e });
     }
-    return entries;
+  });
+  if (current.length) segments.push(current);
+
+  const pathsHTML = segments.map(seg => {
+    const d = seg.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    return `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }).join('');
+
+  const dotsHTML = showDots ? entries.map((e, i) => {
+    if (!e) return '';
+    const x = xAt(i), y = yAt(moodScore(e));
+    const tip = (e.why ? e.why : (e.good===true?'Bonne journée':e.good===null?'Journée neutre':'Journée difficile')) + (e.starred ? ' ⭐' : '');
+    return `<circle class="mood-chart-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${moodColorVar(e)}" stroke="white" stroke-width="1.5" onclick="openModal('${e.date}')"><title>${escapeHtml(formatDate(e.date, true))} — ${escapeHtml(tip)}</title></circle>`;
+  }).join('') : '';
+
+  // reference lines for good / neutral / bad levels
+  const refLines = [0, 1, 2].map(s => {
+    const y = yAt(s);
+    return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="var(--paper-line)" stroke-width="1" stroke-dasharray="3,4"/>`;
+  }).join('');
+
+  const yLabels = `
+    <text x="${padL - 8}" y="${yAt(2)+4}" text-anchor="end" font-size="10" fill="var(--green)" font-family="Outfit, sans-serif">☀️</text>
+    <text x="${padL - 8}" y="${yAt(1)+4}" text-anchor="end" font-size="10" fill="var(--neutral)" font-family="Outfit, sans-serif">🌤️</text>
+    <text x="${padL - 8}" y="${yAt(0)+4}" text-anchor="end" font-size="10" fill="var(--red)" font-family="Outfit, sans-serif">🌧️</text>`;
+
+  // x-axis date labels: show a handful, evenly spaced
+  let xLabelsHTML = '';
+  if (showLabels) {
+    const step = n <= 8 ? 1 : Math.ceil(n / 6);
+    for (let i = 0; i < n; i += step) {
+      const x = xAt(i);
+      xLabelsHTML += `<text x="${x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="var(--ink-faint)" font-family="Outfit, sans-serif">${escapeHtml(formatDate(keys[i], true))}</text>`;
+    }
+  } else {
+    // sparse labels for long ranges (365j) — show ~6 month markers
+    const step = Math.ceil(n / 6);
+    for (let i = 0; i < n; i += step) {
+      const [y, m] = keys[i].split('-').map(Number);
+      const label = new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }).replace('.', '');
+      xLabelsHTML += `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="var(--ink-faint)" font-family="Outfit, sans-serif">${escapeHtml(label)}</text>`;
+    }
   }
-  const s1 = weekEntries(1, 7), s2 = weekEntries(8, 14);
-  function avg(arr) {
-    if (!arr.length) return null;
-    return arr.reduce((acc, e) => acc + (e.good===true?2:e.good===null?1:0), 0) / arr.length;
-  }
-  return { avg1: avg(s1), avg2: avg(s2), s1count: s1.length, s2count: s2.length };
+
+  const good = known.filter(e => e.good === true).length;
+  const neutral = known.filter(e => e.good === null).length;
+  const bad = known.filter(e => e.good === false).length;
+  const summary = `${known.length} jour${known.length>1?'s':''} renseigné${known.length>1?'s':''} sur ${n} — ${good} ☀️ · ${neutral} 🌤️ · ${bad} 🌧️`;
+
+  return `
+    <svg class="mood-chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      ${refLines}
+      ${yLabels}
+      ${pathsHTML}
+      ${dotsHTML}
+      ${xLabelsHTML}
+    </svg>
+    <div class="mood-chart-summary">${summary}</div>`;
 }
 
 function renderStats() {
@@ -958,23 +1069,23 @@ function renderStats() {
   const pctBad30 = total30>0?Math.round(bad30/total30*100):0;
   const pctGoodAll = totalAll>0?Math.round(goodAll/totalAll*100):0;
 
-  const trend = calcWeekTrend();
-  let trendHTML = '';
-  if (trend.s1count === 0) {
-    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap flat">—</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict flat">Pas encore de données</div></div></div>`;
-  } else {
-    const diff = trend.avg2 !== null ? trend.avg1 - trend.avg2 : null;
-    let dir, arrow, verdictText, detailText;
-    if (diff === null) { dir='flat'; arrow='→'; verdictText='Première semaine'; detailText=`${trend.s1count} entrée${trend.s1count>1?'s':''} cette semaine.`; }
-    else if (diff >= 1) { dir='up'; arrow='↑'; verdictText='En amélioration'; detailText=`Moyenne en hausse de +${diff.toFixed(1)} pt.`; }
-    else if (diff <= -1) { dir='down'; arrow='↓'; verdictText='En baisse'; detailText=`Moyenne en baisse de ${Math.abs(diff).toFixed(1)} pt.`; }
-    else { dir='flat'; arrow='→'; verdictText='Stable'; detailText=`Variation de ${diff>0?'+':''}${diff.toFixed(1)} pt.`; }
-    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap ${dir}">${arrow}</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict ${dir}">${verdictText}</div><div class="trend-detail">${detailText}</div></div><div class="trend-scores"><div class="trend-score-item"><span>Cette semaine</span><span class="score-val">${trend.avg1.toFixed(1)}</span></div>${trend.avg2!==null?`<div class="trend-score-item"><span>Sem. préc.</span><span class="score-val">${trend.avg2.toFixed(1)}</span></div>`:''}</div></div>`;
-  }
+  const periods = [
+    { v: 7, label: '7j' },
+    { v: 14, label: '14j' },
+    { v: 30, label: '30j' },
+    { v: 365, label: '1 an' },
+  ];
+  const periodButtonsHTML = periods.map(p => `<button class="period-btn ${chartPeriod===p.v?'active':''}" data-period="${p.v}" onclick="setChartPeriod(${p.v})">${p.label}</button>`).join('');
+  const chartHTML = `
+    <div class="section-card">
+      <div class="section-title">Évolution de l'humeur</div>
+      <div class="chart-period-row">${periodButtonsHTML}</div>
+      <div id="moodChartContainer">${renderMoodChartSVG(chartPeriod)}</div>
+    </div>`;
 
   container.innerHTML = `
     ${streak>1?`<div class="streak-row"><div class="streak-badge">🔥 Série de ${streak} jour${streak>1?'s':''} consécutif${streak>1?'s':''}</div></div>`:''}
-    ${trendHTML}
+    ${chartHTML}
     <div class="section-card">
       <div class="section-title">30 derniers jours — ${total30} renseigné${total30>1?'s':''}</div>
       <div class="stat-grid-3">
