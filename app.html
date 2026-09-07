@@ -795,35 +795,10 @@ function showPage(name) {
   if (name==='history') renderHistory();
   if (name==='settings') renderSettings();
 }
-function isTooEarly() {
-  const now = new Date();
-  return now.getHours() < 18;
-}
 
-function renderEarlyBlock() {
-  const now = new Date();
-  const target = new Date();
-  target.setHours(18, 0, 0, 0);
-  const diffMs = target - now;
-  const h = Math.floor(diffMs / 3600000);
-  const m = Math.floor((diffMs % 3600000) / 60000);
-
-  return `
-    <div class="already-done">
-      <span class="big-emoji">🕕</span>
-      <h2>Pas encore l'heure !</h2>
-      <p>Le journal du jour s'ouvre à <strong>18h</strong> pour mieux refléter ta journée.<br>
-      Il reste <strong>${h}h${pad(m)}</strong> avant de pouvoir saisir.</p>
-    </div>`;
-}
 function renderDaily(key = todayKey()) {
   currentDayKey = key;
   const isToday = key === todayKey();
-  // Bloquer si c'est aujourd'hui et avant 18h
-if (isToday && !editMode && !existing && isTooEarly()) {
-  container.innerHTML = renderEarlyBlock();
-  return;
-}
   const existing = getEntry(key);
   const container = document.getElementById('form-container');
 
