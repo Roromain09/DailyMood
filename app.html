@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Daily Mood</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #1c1c2e;
+  --ink-muted: #4a4a6a;
+  --ink-faint: #9090b0;
+  --paper: #f8f6f2;
+  --paper-warm: #f2ede3;
+  --paper-line: #e5dfd4;
+  --gold: #b8851a;
+  --gold-light: #fdf3d8;
+  --green: #2a7a4f;
+  --green-light: #e6f5ee;
+  --green-mid: #52a876;
+  --neutral: #7a6540;
+  --neutral-light: #f0ead8;
+  --neutral-mid: #b09a68;
+  --red: #9b2e2e;
+  --red-light: #fceaea;
+  --red-mid: #c96060;
+  --accent: #5046c8;
+  --accent-light: #eeedf8;
+  --star: #7ab8e8;
+  --star-glow: #b8daf5;
+  --star-light: #eaf4fd;
+  --star-border: rgba(122,184,232,0.4);
+  --shadow: rgba(28,28,46,0.08);
+  --shadow-md: rgba(28,28,46,0.14);
+  --radius: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #eae8f4;
+    --ink-muted: #9898be;
+    --ink-faint: #555570;
+    --paper: #111118;
+    --paper-warm: #17171f;
+    --paper-line: #252530;
+    --gold: #d4a840;
+    --gold-light: #2a2010;
+    --green: #4aaa70;
+    --green-light: #0d251a;
+    --green-mid: #3a8a5a;
+    --neutral: #c4a840;
+    --neutral-light: #252010;
+    --neutral-mid: #a08830;
+    --red: #d06060;
+    --red-light: #250d0d;
+    --red-mid: #a03030;
+    --accent: #7b70f0;
+    --accent-light: #1a1835;
+    --star: #60a8d8;
+    --star-glow: #90c8f0;
+    --star-light: #0e1e2a;
+    --star-border: rgba(96,168,216,0.35);
+    --shadow: rgba(0,0,0,0.4);
+    --shadow-md: rgba(0,0,0,0.6);
+  }
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ── RESET PASSWORD SCREEN ── */
+.reset-screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+.reset-screen.visible { display: flex; }
+
+.auth-box {
+  background: white;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 32px var(--shadow-md);
+}
+@media (prefers-color-scheme: dark) { .auth-box { background: var(--paper-warm); } }
+.auth-logo { text-align: center; margin-bottom: 2rem; }
+.auth-logo h1 { font-family: 'Lora', serif; font-size: 26px; font-weight: 400; }
+.auth-logo h1 em { font-style: italic; color: var(--gold); }
+.auth-logo p { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
+.auth-field { margin-bottom: 1rem; }
+.auth-field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-faint); margin-bottom: 6px; letter-spacing: 0.05em; }
+.auth-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--paper-line);
+  border-radius: 10px;
+  background: var(--paper);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.auth-input::placeholder { color: var(--ink-faint); }
+.auth-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  margin-top: 0.5rem;
+}
+.auth-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.auth-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.auth-error {
+  margin-top: 1rem;
+  padding: 10px 13px;
+  background: var(--red-light);
+  border: 1px solid rgba(155,46,46,0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--red);
+  display: none;
+}
+.auth-error.visible { display: block; }
+.auth-success {
+  margin-top: 1rem;
+  padding: 10px 13px;
+  background: var(--green-light);
+  border: 1px solid rgba(42,122,79,0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--green);
+  display: none;
+}
+.auth-success.visible { display: block; }
+
+/* ── APP ── */
+.app {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+.app.visible { display: block; }
+
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--paper-line);
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.date-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-light);
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(184,133,26,0.2);
+}
+.header h1 { font-family: 'Lora', serif; font-size: 30px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
+.header h1 em { font-style: italic; color: var(--gold); }
+
+.header-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logout-btn {
+  padding: 6px 14px;
+  border: 1.5px solid var(--paper-line);
+  border-radius: 20px;
+  background: transparent;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.logout-btn:hover { border-color: var(--ink-faint); color: var(--ink); background: var(--paper-warm); }
+.delete-account-btn { padding: 6px 10px; color: var(--ink-faint); }
+.delete-account-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+/* ── NAV ── */
+.nav-tabs { display: flex; gap: 3px; background: var(--paper-warm); border: 1px solid var(--paper-line); border-radius: 12px; padding: 4px; margin-bottom: 2rem; }
+.nav-tab { flex: 1; padding: 9px 8px; border: none; background: transparent; border-radius: 9px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 400; color: var(--ink-muted); cursor: pointer; transition: all 0.2s ease; }
+.nav-tab:hover:not(.active) { color: var(--ink); background: rgba(255,255,255,0.5); }
+.nav-tab.active { background: white; color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px var(--shadow), 0 0 0 1px var(--paper-line); }
+@media (prefers-color-scheme: dark) { .nav-tab.active { background: var(--paper-line); } }
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeIn 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── DAILY CARD ── */
+.daily-card { background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 2rem; box-shadow: 0 2px 16px var(--shadow); }
+@media (prefers-color-scheme: dark) { .daily-card { background: var(--paper-warm); } }
+.question { font-family: 'Lora', serif; font-size: 23px; font-weight: 400; margin-bottom: 1.5rem; line-height: 1.4; color: var(--ink); }
+
+.choice-row { display: flex; gap: 12px; margin-bottom: 1.5rem; }
+.choice-btn { flex: 1; padding: 20px 12px; border: 1.5px solid var(--paper-line); border-radius: 12px; background: var(--paper); cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 500; color: var(--ink-muted); transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.choice-btn .emoji { font-size: 32px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.choice-btn:hover { border-color: var(--ink-faint); color: var(--ink); transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow-md); }
+.choice-btn:hover .emoji { transform: scale(1.2); }
+.choice-btn.selected-yes { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.choice-btn.selected-yes .emoji { transform: scale(1.15); }
+.choice-btn.selected-neutral { background: var(--neutral-light); border-color: var(--neutral); color: var(--neutral); }
+.choice-btn.selected-neutral .emoji { transform: scale(1.15); }
+.choice-btn.selected-no { background: var(--red-light); border-color: var(--red); color: var(--red); }
+.choice-btn.selected-no .emoji { transform: scale(1.15); }
+
+.why-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-bottom: 8px; }
+.why-input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--paper-line); border-radius: 10px; background: var(--paper); font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--ink); resize: none; line-height: 1.65; outline: none; transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 1.5rem; }
+.why-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.why-input::placeholder { color: var(--ink-faint); }
+
+.submit-btn { width: 100%; padding: 14px; background: var(--ink); color: var(--paper); border: none; border-radius: 10px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.2s, box-shadow 0.2s; letter-spacing: 0.01em; }
+.submit-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow-md); }
+.submit-btn:active:not(:disabled) { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ── ALREADY DONE ── */
+.already-done { text-align: center; padding: 2.5rem 1.5rem; background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); box-shadow: 0 2px 16px var(--shadow); }
+@media (prefers-color-scheme: dark) { .already-done { background: var(--paper-warm); } }
+.already-done .big-emoji { font-size: 56px; margin-bottom: 1rem; display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.already-done h2 { font-family: 'Lora', serif; font-size: 20px; font-weight: 400; margin-bottom: 0.5rem; }
+.already-done p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; }
+.edit-btn { margin-top: 1.25rem; padding: 8px 22px; border: 1.5px solid var(--paper-line); border-radius: 20px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--ink-muted); cursor: pointer; transition: all 0.2s; }
+.edit-btn:hover { border-color: var(--ink-faint); color: var(--ink); background: var(--paper); }
+
+/* ── STATS ── */
+.section-card { background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 8px var(--shadow); }
+@media (prefers-color-scheme: dark) { .section-card { background: var(--paper-warm); } }
+.section-title { font-size: 11px; font-weight: 600; color: var(--ink-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
+
+.stat-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.stat-grid-1 { display: grid; grid-template-columns: 1fr; gap: 0; margin-bottom: 1rem; }
+.stat-mini { background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.5rem 1.25rem; box-shadow: 0 1px 8px var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
+@media (prefers-color-scheme: dark) { .stat-mini { background: var(--paper-warm); } }
+.stat-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 16px var(--shadow-md); }
+.stat-mini .label { font-size: 11px; font-weight: 600; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+.stat-mini .val { font-family: 'Lora', serif; font-size: 38px; font-weight: 400; line-height: 1; }
+.stat-grid-3 .stat-mini .val { font-size: 28px; }
+.stat-grid-3 .stat-mini { padding: 1rem; }
+.stat-mini .sub { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+.streak-row { display: flex; justify-content: center; margin-bottom: 1rem; }
+.streak-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 18px; background: var(--gold-light); border: 1px solid rgba(184,133,26,0.25); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--gold); }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin-bottom: 6px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: default; }
+.bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; transition: opacity 0.2s, transform 0.2s; }
+.bar.good { background: var(--green-mid); }
+.bar.neutral { background: var(--neutral-mid); }
+.bar.bad { background: var(--red-mid); }
+.bar.empty { background: var(--paper-line); }
+.bar-wrap:hover .bar:not(.empty) { opacity: 0.75; transform: scaleY(1.04); transform-origin: bottom; }
+.bar-label { font-size: 8px; color: var(--ink-faint); }
+.legend { display: flex; gap: 16px; font-size: 11px; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+.note-item { padding: 12px 0; border-bottom: 1px solid var(--paper-line); display: flex; gap: 12px; align-items: flex-start; }
+.note-item:last-child { border-bottom: none; padding-bottom: 0; }
+.note-emoji { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+.note-date { font-size: 11px; color: var(--ink-faint); margin-bottom: 3px; }
+.note-text { font-size: 14px; color: var(--ink-muted); font-style: italic; line-height: 1.55; }
+
+/* ── CALENDAR ── */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.cal-month-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; color: var(--ink); text-transform: capitalize; }
+.cal-arrow { width: 34px; height: 34px; border: 1.5px solid var(--paper-line); border-radius: 8px; background: transparent; color: var(--ink-muted); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.cal-arrow:hover { background: var(--paper-warm); color: var(--ink); border-color: var(--ink-faint); }
+.cal-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-name { text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); padding: 6px 0; }
+.cal-cell { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; cursor: default; position: relative; transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s; user-select: none; }
+.cal-cell.empty { background: transparent; }
+.cal-cell.future { color: var(--ink-faint); background: transparent; }
+.cal-cell.no-entry { color: var(--ink-faint); background: var(--paper-warm); border: 1px solid var(--paper-line); }
+.cal-cell.good-day { background: var(--green-light); color: var(--green); border: 1.5px solid rgba(42,122,79,0.25); cursor: pointer; font-weight: 600; }
+.cal-cell.neutral-day { background: var(--neutral-light); color: var(--neutral); border: 1.5px solid rgba(122,106,42,0.25); cursor: pointer; font-weight: 600; }
+.cal-cell.bad-day { background: var(--red-light); color: var(--red); border: 1.5px solid rgba(155,46,46,0.25); cursor: pointer; font-weight: 600; }
+.cal-cell.today-cell { box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px var(--gold-light); }
+.cal-cell.no-entry.today-cell { background: white; }
+.cal-cell.good-day:hover, .cal-cell.neutral-day:hover, .cal-cell.bad-day:hover { transform: scale(1.15); box-shadow: 0 4px 12px var(--shadow-md); z-index: 10; }
+.cal-cell.good-day:hover { background: var(--green); color: white; }
+.cal-cell.neutral-day:hover { background: var(--neutral); color: white; }
+.cal-cell.bad-day:hover { background: var(--red); color: white; }
+.cal-cell[data-tip]:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 400; font-style: italic; padding: 6px 10px; border-radius: 8px; white-space: normal; text-align: center; line-height: 1.4; z-index: 100; pointer-events: none; box-shadow: 0 4px 12px var(--shadow-md); max-width: 200px; }
+.cal-cell[data-tip]:hover::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--ink); z-index: 101; pointer-events: none; }
+.cal-legend { display: flex; align-items: center; gap: 16px; margin-top: 1rem; font-size: 11px; color: var(--ink-faint); flex-wrap: wrap; }
+.cal-legend span { display: flex; align-items: center; gap: 5px; }
+.cl-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── HISTORY ── */
+.history-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+.history-filter { display: flex; gap: 6px; }
+.filter-btn { padding: 6px 14px; border: 1.5px solid var(--paper-line); border-radius: 20px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; }
+.filter-btn:hover { border-color: var(--ink-faint); color: var(--ink); }
+.filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.history-count { font-size: 12px; color: var(--ink-faint); }
+
+.entries-list { display: flex; flex-direction: column; gap: 8px; }
+.entry-item { background: white; border: 1px solid var(--paper-line); border-radius: 12px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+@media (prefers-color-scheme: dark) { .entry-item { background: var(--paper-warm); } }
+.entry-item:hover { transform: translateX(3px); box-shadow: 0 2px 12px var(--shadow); }
+.entry-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.entry-dot.good { background: var(--green-light); }
+.entry-dot.neutral { background: var(--neutral-light); }
+.entry-dot.bad { background: var(--red-light); }
+.entry-item:hover .entry-dot { transform: scale(1.15); }
+.entry-body { flex: 1; min-width: 0; }
+.entry-date { font-size: 12px; color: var(--ink-faint); margin-bottom: 3px; text-transform: capitalize; }
+.entry-why { font-size: 14px; color: var(--ink-muted); font-style: italic; line-height: 1.55; }
+
+/* ── STAR ── */
+.star-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding: 12px 16px; border-radius: 12px; border: 1.5px dashed var(--paper-line); cursor: pointer; transition: all 0.2s; user-select: none; background: transparent; font-family: 'Outfit', sans-serif; width: 100%; text-align: left; }
+.star-toggle:hover { border-color: var(--star); background: var(--star-light); }
+.star-toggle.starred { border-style: solid; border-color: var(--star-border); background: var(--star-light); }
+.star-icon { font-size: 22px; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s; filter: grayscale(1) opacity(0.35); line-height: 1; }
+.star-toggle.starred .star-icon { filter: grayscale(0) drop-shadow(0 0 6px var(--star-glow)); transform: scale(1.2) rotate(-8deg); }
+.star-label { font-size: 13px; font-weight: 500; color: var(--ink-faint); transition: color 0.2s; }
+.star-toggle.starred .star-label { color: var(--star); font-weight: 600; }
+
+.cal-cell.starred-day { background: var(--star-light) !important; color: var(--star) !important; border: 1.5px solid var(--star-border) !important; box-shadow: 0 0 0 2px var(--star-glow), inset 0 0 8px rgba(122,184,232,0.12) !important; font-weight: 700 !important; }
+.cell-star { position: absolute; top: 2px; right: 3px; font-size: 8px; color: var(--star); filter: drop-shadow(0 0 4px var(--star-glow)); line-height: 1; pointer-events: none; }
+.cal-cell.starred-day:hover { background: var(--star) !important; color: white !important; box-shadow: 0 4px 14px rgba(122,184,232,0.5) !important; }
+.cal-cell.starred-day:hover .cell-star { color: white; }
+.cl-dot.star-dot { background: var(--star-light); border: 1.5px solid var(--star-border) !important; position: relative; }
+.cl-dot.star-dot::after { content: '★'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6px; color: var(--star); }
+
+/* ── TREND ── */
+.trend-widget { display: flex; align-items: center; gap: 1.25rem; background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 8px var(--shadow); }
+@media (prefers-color-scheme: dark) { .trend-widget { background: var(--paper-warm); } }
+.trend-arrow-wrap { flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.trend-arrow-wrap.up { background: var(--green-light); color: var(--green); }
+.trend-arrow-wrap.down { background: var(--red-light); color: var(--red); }
+.trend-arrow-wrap.flat { background: var(--neutral-light); color: var(--neutral); }
+.trend-body { flex: 1; min-width: 0; }
+.trend-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
+.trend-verdict { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; line-height: 1.2; }
+.trend-verdict.up { color: var(--green); }
+.trend-verdict.down { color: var(--red); }
+.trend-verdict.flat { color: var(--neutral); }
+.trend-detail { font-size: 12px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5; }
+.trend-scores { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.trend-score-item { font-size: 11px; color: var(--ink-faint); display: flex; align-items: center; gap: 5px; }
+.trend-score-item .score-val { font-family: 'Lora', serif; font-size: 15px; color: var(--ink-muted); font-weight: 500; min-width: 24px; text-align: right; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(28,28,46,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box { background: var(--paper); border-radius: var(--radius); padding: 2rem; max-width: 380px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: translateY(20px) scale(0.97); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
+.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+.modal-close { position: absolute; top: 1rem; right: 1rem; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--paper-line); background: transparent; color: var(--ink-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; line-height: 1; }
+.modal-close:hover { background: var(--paper-warm); color: var(--ink); }
+.modal-emoji { font-size: 44px; display: block; margin-bottom: 0.75rem; }
+.modal-date { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.5rem; }
+.modal-verdict { font-family: 'Lora', serif; font-size: 20px; margin-bottom: 0.75rem; }
+.modal-verdict.good { color: var(--green); }
+.modal-verdict.neutral { color: var(--neutral); }
+.modal-verdict.bad { color: var(--red); }
+.modal-why { font-size: 14px; color: var(--ink-muted); font-style: italic; line-height: 1.65; padding: 12px 14px; background: var(--paper-warm); border-radius: 10px; border-left: 3px solid var(--paper-line); }
+.modal-why.good-border { border-left-color: var(--green); }
+.modal-why.bad-border { border-left-color: var(--red); }
+.modal-why.neutral-border { border-left-color: var(--neutral); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--paper); padding: 10px 22px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px var(--shadow-md); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-faint); font-size: 15px; }
+.empty-state .big { font-size: 44px; margin-bottom: 1rem; }
+.loading-msg { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 14px; }
+
+/* ── SETTINGS / IMPORT ── */
+.import-drop-zone {
+  border: 2px dashed var(--paper-line);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--paper);
+}
+.import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+.import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+</style>
+</head>
+<body>
+
+<!-- ── RESET PASSWORD SCREEN (retour depuis email Supabase) ── -->
+<div class="reset-screen" id="resetScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>Mon <em>Daily</em> mood</h1>
+      <p>Nouveau mot de passe</p>
+    </div>
+    <div class="auth-field">
+      <label>Nouveau mot de passe</label>
+      <input class="auth-input" type="password" id="resetPassword" placeholder="8 caractères minimum" autocomplete="new-password">
+    </div>
+    <div class="auth-field">
+      <label>Confirmer le mot de passe</label>
+      <input class="auth-input" type="password" id="resetPasswordConfirm" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="auth-btn" id="resetBtn" onclick="handleResetPassword()">Enregistrer le nouveau mot de passe</button>
+    <div class="auth-error" id="resetError"></div>
+    <div class="auth-success" id="resetSuccess">Mot de passe modifié ! Redirection…</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div class="app" id="appShell">
+  <div class="header">
+    <div class="header-actions">
+      <button class="logout-btn delete-account-btn" onclick="openDeleteModal()" title="Supprimer mon compte">🗑</button>
+      <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
+    </div>
+    <div class="date-badge" id="todayLabel"></div>
+    <h1>Mon <em>Daily</em> mood</h1>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
+    <button class="nav-tab" onclick="showPage('stats')">Stats</button>
+    <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
+    <button class="nav-tab" onclick="showPage('history')">Historique</button>
+    <button class="nav-tab" onclick="showPage('settings')">⚙</button>
+  </div>
+
+  <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
+  <div id="page-stats" class="page"><div id="stats-container"></div></div>
+  <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
+  <div id="page-history" class="page"><div id="history-container"></div></div>
+  <div id="page-settings" class="page"><div id="settings-container"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── DELETE ACCOUNT MODAL ── -->
+<div class="modal-overlay" id="deleteModalOverlay" onclick="closeDeleteModal(event)">
+  <div class="modal-box" id="deleteModalBox">
+    <button class="modal-close" onclick="closeDeleteModalDirect()">×</button>
+    <div style="text-align:center;margin-bottom:1.25rem">
+      <span style="font-size:44px">⚠️</span>
+    </div>
+    <div style="font-family:'Lora',serif;font-size:19px;font-weight:400;margin-bottom:0.6rem;color:var(--red)">Supprimer mon compte</div>
+    <p style="font-size:13px;color:var(--ink-muted);line-height:1.65;margin-bottom:1.25rem">
+      Cette action est <strong>irréversible</strong>. Toutes tes entrées et ton compte seront définitivement supprimés.
+    </p>
+    <div style="background:var(--red-light);border:1px solid rgba(155,46,46,0.2);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;font-size:13px;color:var(--red)">
+      Pour confirmer, tape <strong>SUPPRIMER</strong> ci-dessous.
+    </div>
+    <input class="auth-input" type="text" id="deleteConfirmInput" placeholder="SUPPRIMER" autocomplete="off" oninput="onDeleteInputChange()">
+    <button class="auth-btn" id="deleteConfirmBtn" onclick="handleDeleteAccount()" disabled
+      style="background:var(--red);margin-top:0.75rem;opacity:0.35">
+      Supprimer définitivement
+    </button>
+    <div class="auth-error" id="deleteError" style="margin-top:0.75rem"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-box" id="modalBox">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://hjvlwzcvstniapdrzajq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdmx3emN2c3RuaWFwZHJ6YWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MDkyNTIsImV4cCI6MjEwNDE4NTI1Mn0.c3xoY8aAeu8IdRy8iBIPspbkEkjMgWzGCiU2JJCFMao';
+
+const TOKEN_KEY = 'dm_token';
+const REFRESH_KEY = 'dm_refresh';
+
+// ─────────────────────────────────────────────
+// AUTH STATE
+// ─────────────────────────────────────────────
+let authToken = null;
+let resetAccessToken = null;
+
+function saveSession(access_token, refresh_token) {
+  authToken = access_token;
+  try {
+    localStorage.setItem(TOKEN_KEY, access_token);
+    if (refresh_token) localStorage.setItem(REFRESH_KEY, refresh_token);
+  } catch {}
+}
+
+function clearSession() {
+  authToken = null;
+  try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(REFRESH_KEY); } catch {}
+}
+
+function getSavedToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
+function getSavedRefresh() { try { return localStorage.getItem(REFRESH_KEY); } catch { return null; } }
+
+// ─────────────────────────────────────────────
+// SUPABASE HELPERS
+// ─────────────────────────────────────────────
+async function supabaseAuth(endpoint, body) {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+async function updatePassword(newPassword, token) {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  return r.json();
+}
+
+async function signOut(token) {
+  await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${token}` },
+  });
+}
+
+async function refreshToken(refresh) {
+  return supabaseAuth('token?grant_type=refresh_token', { refresh_token: refresh });
+}
+
+// ─────────────────────────────────────────────
+// PARSE HASH depuis URL (liens Supabase)
+// ─────────────────────────────────────────────
+function parseHashParams() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return null;
+  const params = {};
+  hash.split('&').forEach(part => {
+    const [k, v] = part.split('=');
+    if (k && v) params[decodeURIComponent(k)] = decodeURIComponent(v);
+  });
+  return params;
+}
+
+function clearHash() {
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
+// ─────────────────────────────────────────────
+// RESET PASSWORD
+// ─────────────────────────────────────────────
+async function handleResetPassword() {
+  const pwd = document.getElementById('resetPassword').value;
+  const pwd2 = document.getElementById('resetPasswordConfirm').value;
+  const errEl = document.getElementById('resetError');
+  const successEl = document.getElementById('resetSuccess');
+  const btn = document.getElementById('resetBtn');
+  errEl.classList.remove('visible');
+  if (!pwd || !pwd2) { errEl.textContent = 'Remplis les deux champs.'; errEl.classList.add('visible'); return; }
+  if (pwd.length < 8) { errEl.textContent = 'Le mot de passe doit faire 8 caractères minimum.'; errEl.classList.add('visible'); return; }
+  if (pwd !== pwd2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.classList.add('visible'); return; }
+  if (!resetAccessToken) { errEl.textContent = 'Lien de réinitialisation invalide ou expiré.'; errEl.classList.add('visible'); return; }
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const data = await updatePassword(pwd, resetAccessToken).catch(() => null);
+  btn.disabled = false; btn.textContent = 'Enregistrer le nouveau mot de passe';
+  if (!data || data.error) {
+    errEl.textContent = data?.msg || 'Erreur lors de la mise à jour. Le lien est peut-être expiré.';
+    errEl.classList.add('visible');
+    return;
+  }
+  successEl.style.display = 'block';
+  btn.disabled = true;
+  resetAccessToken = null;
+  setTimeout(() => { window.location.replace('/'); }, 2000);
+}
+
+// ─────────────────────────────────────────────
+// LOGOUT / DELETE
+// ─────────────────────────────────────────────
+async function handleLogout() {
+  if (authToken) await signOut(authToken).catch(() => {});
+  clearSession();
+  db = [];
+  window.location.replace('/');
+}
+
+function openDeleteModal() {
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+  document.getElementById('deleteConfirmBtn').style.opacity = '0.35';
+  document.getElementById('deleteError').classList.remove('visible');
+  document.getElementById('deleteModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('deleteConfirmInput').focus(), 100);
+}
+
+function onDeleteInputChange() {
+  const val = document.getElementById('deleteConfirmInput').value;
+  const ok = val === 'SUPPRIMER';
+  document.getElementById('deleteConfirmBtn').disabled = !ok;
+  document.getElementById('deleteConfirmBtn').style.opacity = ok ? '1' : '0.35';
+}
+
+function closeDeleteModal(e) {
+  if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModalDirect();
+}
+function closeDeleteModalDirect() {
+  document.getElementById('deleteModalOverlay').classList.remove('open');
+}
+
+async function handleDeleteAccount() {
+  const btn = document.getElementById('deleteConfirmBtn');
+  const errEl = document.getElementById('deleteError');
+  errEl.classList.remove('visible');
+  btn.disabled = true;
+  btn.textContent = 'Suppression…';
+  try {
+    const r = await apiFetch('DELETE', '/api/account');
+    if (r && r.error) throw new Error(r.error);
+    clearSession();
+    db = [];
+    window.location.replace('/');
+  } catch (err) {
+    errEl.textContent = err?.message || 'Une erreur est survenue. Réessaie.';
+    errEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Supprimer définitivement';
+    btn.style.opacity = '1';
+  }
+}
+
+// ─────────────────────────────────────────────
+// API CALLS
+// ─────────────────────────────────────────────
+async function apiFetch(method, path_, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(path_, opts);
+  if (r.status === 401) {
+    const refreshed = await tryRefreshToken();
+    if (!refreshed) { clearSession(); window.location.replace('/'); throw new Error('Session expirée'); }
+    opts.headers['Authorization'] = `Bearer ${authToken}`;
+    return fetch(path_, opts).then(r2 => r2.json());
+  }
+  return r.json();
+}
+
+async function tryRefreshToken() {
+  const refresh = getSavedRefresh();
+  if (!refresh) return false;
+  const data = await refreshToken(refresh).catch(() => null);
+  if (!data || !data.access_token) return false;
+  saveSession(data.access_token, data.refresh_token);
+  return true;
+}
+
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+let db = [];
+
+async function loadFromServer() {
+  const data = await apiFetch('GET', '/api/entries');
+  db = Array.isArray(data) ? data : [];
+  db.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+async function saveEntry(entry) {
+  await apiFetch('POST', '/api/entries', entry);
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+const pages = ['daily','stats','calendar','history','settings'];
+let editMode = false;
+let selectedAnswer = undefined;
+let selectedStar = false;
+let historyFilter = 'all';
+let calYear, calMonth;
+let currentDayKey = todayKey();
+
+function pad(n) { return String(n).padStart(2,'0'); }
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function formatDate(key, short=false) {
+  const [y,m,d] = key.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  if (short) return `${dt.toLocaleDateString('fr-FR',{day:'numeric'})} ${dt.toLocaleDateString('fr-FR',{month:'short'}).replace('.','')}`;
+  return dt.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+function getEntry(key) { return db.find(e => e.date === key); }
+
+async function setEntry(key, good, why, starred) {
+  const entry = { date: key, good, why: why || '', starred: !!starred, ts: Date.now() };
+  const idx = db.findIndex(e => e.date === key);
+  if (idx >= 0) db[idx] = entry; else db.push(entry);
+  db.sort((a,b) => b.date.localeCompare(a.date));
+  await saveEntry(entry);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+}
+
+// ─────────────────────────────────────────────
+// PAGES
+// ─────────────────────────────────────────────
+function showPage(name) {
+  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('active', p===name));
+  document.querySelectorAll('.nav-tab').forEach((b,i) => b.classList.toggle('active', pages[i]===name));
+  if (name==='daily') renderDaily(currentDayKey);
+  if (name==='stats') renderStats();
+  if (name==='calendar') renderCalendar();
+  if (name==='history') renderHistory();
+  if (name==='settings') renderSettings();
+}
+
+function renderDaily(key = todayKey()) {
+  currentDayKey = key;
+  const isToday = key === todayKey();
+  const existing = getEntry(key);
+  const container = document.getElementById('form-container');
+
+  if (existing && !editMode) {
+    const mood = existing.good === true ? 'good' : existing.good === false ? 'bad' : 'neutral';
+    const emoji = mood === 'good' ? '☀️' : mood === 'neutral' ? '🌤️' : '🌧️';
+    const label = isToday
+      ? (mood==='good' ? 'Belle journée notée !' : mood==='neutral' ? 'Journée neutre notée.' : 'Journée difficile notée.')
+      : `Journée du ${formatDate(key, true)} enregistrée.`;
+    container.innerHTML = `
+      <div class="already-done">
+        <span class="big-emoji">${emoji}</span>
+        <h2>${label}</h2>
+        <p>${existing.why ? '« '+escapeHtml(existing.why)+' »' : 'Aucun commentaire ajouté.'}</p>
+        <button class="edit-btn" onclick="editDay('${key}')">Modifier cette journée</button>
+        ${!isToday ? `<button class="edit-btn" style="margin-left:8px" onclick="backToToday()">Retour à aujourd'hui</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  selectedAnswer = existing ? existing.good : undefined;
+  selectedStar = existing ? !!existing.starred : false;
+  const why = existing ? existing.why : '';
+  const title = isToday ? 'As-tu passé une bonne journée ?' : `Modifier la journée du ${formatDate(key, true)}`;
+
+  container.innerHTML = `
+    <div class="daily-card">
+      ${!isToday ? `<button class="edit-btn" style="margin-bottom:1rem" onclick="backToToday()">← Retour à aujourd'hui</button>` : ''}
+      <p class="question">${title}</p>
+      <div class="choice-row">
+        <button class="choice-btn ${selectedAnswer===true?'selected-yes':''}" onclick="selectAnswer(true)">
+          <span class="emoji">☀️</span> Oui
+        </button>
+        <button class="choice-btn ${selectedAnswer===null?'selected-neutral':''}" onclick="selectAnswer(null)">
+          <span class="emoji">🌤️</span> Neutre
+        </button>
+        <button class="choice-btn ${selectedAnswer===false?'selected-no':''}" onclick="selectAnswer(false)">
+          <span class="emoji">🌧️</span> Non
+        </button>
+      </div>
+      <button class="star-toggle ${selectedStar?'starred':''}" id="starToggle" onclick="toggleStar()" type="button">
+        <span class="star-icon">⭐</span>
+        <span class="star-label">${selectedStar ? 'Journée exceptionnelle !' : 'Marquer comme journée exceptionnelle'}</span>
+      </button>
+      <div class="why-label">Pourquoi ? <span style="font-weight:300;color:var(--ink-faint)">(facultatif)</span></div>
+      <textarea class="why-input" id="whyInput" rows="3" placeholder="Quelques mots sur ta journée...">${escapeHtml(why)}</textarea>
+      <button class="submit-btn" id="submitBtn" onclick="submitDay()" ${selectedAnswer===undefined?'disabled':''}>Enregistrer</button>
+    </div>`;
+}
+
+function toggleStar() {
+  selectedStar = !selectedStar;
+  const btn = document.getElementById('starToggle');
+  btn.classList.toggle('starred', selectedStar);
+  btn.querySelector('.star-label').textContent = selectedStar ? 'Journée exceptionnelle !' : 'Marquer comme journée exceptionnelle';
+}
+
+function selectAnswer(val) {
+  selectedAnswer = val;
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected-yes','selected-neutral','selected-no'));
+  if (val === true) document.querySelectorAll('.choice-btn')[0].classList.add('selected-yes');
+  else if (val === null) document.querySelectorAll('.choice-btn')[1].classList.add('selected-neutral');
+  else document.querySelectorAll('.choice-btn')[2].classList.add('selected-no');
+  const btn = document.getElementById('submitBtn');
+  if (btn) btn.disabled = false;
+}
+
+async function submitDay() {
+  const why = (document.getElementById('whyInput')?.value || '').trim();
+  const btn = document.getElementById('submitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+  try {
+    await setEntry(currentDayKey, selectedAnswer, why, selectedStar);
+    editMode = false;
+    showToast('✓ Journée enregistrée !');
+    renderDaily(currentDayKey);
+  } catch {
+    showToast('⚠ Erreur lors de l\'enregistrement');
+    if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
+}
+
+function editDay(key) { editMode = true; currentDayKey = key; showPage('daily'); renderDaily(key); }
+function backToToday() { editMode = false; currentDayKey = todayKey(); showPage('daily'); renderDaily(currentDayKey); }
+
+// ─── STATS ───
+function getLast30Keys() {
+  const days = []; const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    days.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
+  }
+  return days;
+}
+
+function calcStreak() {
+  let streak = 0; const today = new Date();
+  for (let i = 0; i < 1000; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    if (getEntry(key)) streak++; else break;
+  }
+  return streak;
+}
+
+function calcWeekTrend() {
+  const today = new Date();
+  function weekEntries(start, end) {
+    const entries = [];
+    for (let i = start; i <= end; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const e = getEntry(key); if (e) entries.push(e);
+    }
+    return entries;
+  }
+  const s1 = weekEntries(1, 7), s2 = weekEntries(8, 14);
+  function avg(arr) {
+    if (!arr.length) return null;
+    return arr.reduce((acc, e) => acc + (e.good===true?2:e.good===null?1:0), 0) / arr.length;
+  }
+  return { avg1: avg(s1), avg2: avg(s2), s1count: s1.length, s2count: s2.length };
+}
+
+function renderStats() {
+  const container = document.getElementById('stats-container');
+  if (db.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="big">📊</div>Commence à remplir ton journal pour voir tes statistiques.</div>`;
+    return;
+  }
+  const last30keys = getLast30Keys();
+  const last30entries = last30keys.map(k => getEntry(k)).filter(Boolean);
+  const good30 = last30entries.filter(e => e.good===true).length;
+  const neutral30 = last30entries.filter(e => e.good===null).length;
+  const bad30 = last30entries.filter(e => e.good===false).length;
+  const total30 = last30entries.length;
+  const totalAll = db.length;
+  const goodAll = db.filter(e => e.good===true).length;
+  const neutralAll = db.filter(e => e.good===null).length;
+  const badAll = db.filter(e => e.good===false).length;
+  const streak = calcStreak();
+
+  const barHTML = last30keys.map(day => {
+    const e = getEntry(day);
+    const label = formatDate(day, true).split(' ')[0];
+    if (!e) return `<div class="bar-wrap"><div class="bar empty" style="height:14px"></div><div class="bar-label">${label}</div></div>`;
+    return `<div class="bar-wrap"><div class="bar ${e.good===true?'good':e.good===false?'bad':'neutral'}" style="height:${e.good===true?72:e.good===null?56:40}px"></div><div class="bar-label">${label}</div></div>`;
+  }).join('');
+
+  const withWhy = db.filter(e => e.why).slice(0,5);
+  const notesHTML = withWhy.length === 0
+    ? `<p style="color:var(--ink-faint);font-size:14px;font-style:italic">Aucune note pour l'instant.</p>`
+    : withWhy.map(e => `<div class="note-item"><span class="note-emoji">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</span><div><div class="note-date">${formatDate(e.date, true)}</div><div class="note-text">« ${escapeHtml(e.why)} »</div></div></div>`).join('');
+
+  const pctGood30 = total30>0?Math.round(good30/total30*100):0;
+  const pctNeutral30 = total30>0?Math.round(neutral30/total30*100):0;
+  const pctBad30 = total30>0?Math.round(bad30/total30*100):0;
+  const pctGoodAll = totalAll>0?Math.round(goodAll/totalAll*100):0;
+
+  const trend = calcWeekTrend();
+  let trendHTML = '';
+  if (trend.s1count === 0) {
+    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap flat">—</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict flat">Pas encore de données</div></div></div>`;
+  } else {
+    const diff = trend.avg2 !== null ? trend.avg1 - trend.avg2 : null;
+    let dir, arrow, verdictText, detailText;
+    if (diff === null) { dir='flat'; arrow='→'; verdictText='Première semaine'; detailText=`${trend.s1count} entrée${trend.s1count>1?'s':''} cette semaine.`; }
+    else if (diff >= 1) { dir='up'; arrow='↑'; verdictText='En amélioration'; detailText=`Moyenne en hausse de +${diff.toFixed(1)} pt.`; }
+    else if (diff <= -1) { dir='down'; arrow='↓'; verdictText='En baisse'; detailText=`Moyenne en baisse de ${Math.abs(diff).toFixed(1)} pt.`; }
+    else { dir='flat'; arrow='→'; verdictText='Stable'; detailText=`Variation de ${diff>0?'+':''}${diff.toFixed(1)} pt.`; }
+    trendHTML = `<div class="trend-widget"><div class="trend-arrow-wrap ${dir}">${arrow}</div><div class="trend-body"><div class="trend-label">Tendance — 7 derniers jours</div><div class="trend-verdict ${dir}">${verdictText}</div><div class="trend-detail">${detailText}</div></div><div class="trend-scores"><div class="trend-score-item"><span>Cette semaine</span><span class="score-val">${trend.avg1.toFixed(1)}</span></div>${trend.avg2!==null?`<div class="trend-score-item"><span>Sem. préc.</span><span class="score-val">${trend.avg2.toFixed(1)}</span></div>`:''}</div></div>`;
+  }
+
+  container.innerHTML = `
+    ${streak>1?`<div class="streak-row"><div class="streak-badge">🔥 Série de ${streak} jour${streak>1?'s':''} consécutif${streak>1?'s':''}</div></div>`:''}
+    ${trendHTML}
+    <div class="section-card">
+      <div class="section-title">30 derniers jours — ${total30} renseigné${total30>1?'s':''}</div>
+      <div class="stat-grid-3">
+        <div class="stat-mini"><div class="label">☀️ Bonnes</div><div class="val" style="color:var(--green)">${pctGood30}%</div><div class="sub">${good30} jour${good30>1?'s':''}</div></div>
+        <div class="stat-mini"><div class="label">🌤️ Neutres</div><div class="val" style="color:var(--neutral)">${pctNeutral30}%</div><div class="sub">${neutral30} jour${neutral30>1?'s':''}</div></div>
+        <div class="stat-mini"><div class="label">🌧️ Difficiles</div><div class="val" style="color:var(--red)">${pctBad30}%</div><div class="sub">${bad30} jour${bad30>1?'s':''}</div></div>
+      </div>
+      <div class="stat-grid-1">
+        <div class="stat-mini" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem">
+          <div><div class="label">Taux global de bonnes journées</div><div class="sub" style="margin-top:2px">${goodAll} ☀️ · ${neutralAll} 🌤️ · ${badAll} 🌧️ sur ${totalAll} jour${totalAll>1?'s':''}</div></div>
+          <div class="val" style="color:var(--accent);flex-shrink:0">${pctGoodAll}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Activité — 30 derniers jours</div>
+      <div class="bar-chart">${barHTML}</div>
+      <div class="legend">
+        <span><div class="legend-dot" style="background:var(--green-mid)"></div> Bonne</span>
+        <span><div class="legend-dot" style="background:var(--neutral-mid)"></div> Neutre</span>
+        <span><div class="legend-dot" style="background:var(--red-mid)"></div> Difficile</span>
+        <span><div class="legend-dot" style="background:var(--paper-line)"></div> Non renseigné</span>
+      </div>
+    </div>
+    <div class="section-card"><div class="section-title">Dernières notes</div>${notesHTML}</div>`;
+}
+
+// ─── CALENDAR ───
+function renderCalendar(year, month) {
+  const container = document.getElementById('calendar-container');
+  const today = new Date();
+  if (year===undefined) year = calYear!==undefined?calYear:today.getFullYear();
+  if (month===undefined) month = calMonth!==undefined?calMonth:today.getMonth();
+  calYear = year; calMonth = month;
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month+1, 0);
+  const todayKey_ = todayKey();
+  const dayNames = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+  let startOffset = firstDay.getDay()-1; if (startOffset<0) startOffset=6;
+  let cellsHTML = '';
+  for (let i=0;i<startOffset;i++) cellsHTML+=`<div class="cal-cell empty"></div>`;
+  for (let d=1;d<=lastDay.getDate();d++) {
+    const key=`${year}-${pad(month+1)}-${pad(d)}`;
+    const entry=getEntry(key); const isToday=key===todayKey_; const isFuture=key>todayKey_;
+    const todayCls=isToday?' today-cell':'';
+    if (isFuture) { cellsHTML+=`<div class="cal-cell future${todayCls}">${d}</div>`; }
+    else if (!entry) { cellsHTML+=`<div class="cal-cell no-entry${todayCls}" onclick="editDay('${key}')" style="cursor:pointer">${d}</div>`; }
+    else {
+      const cls=entry.good===true?'good-day':entry.good===false?'bad-day':'neutral-day';
+      const starCls=entry.starred?' starred-day':'';
+      const tipBase=entry.good===true?'✓ Bonne journée':entry.good===null?'○ Journée neutre':'✗ Journée difficile';
+      const tipText=(entry.why?'« '+entry.why+' »':tipBase)+(entry.starred?' ⭐':'');
+      cellsHTML+=`<div class="cal-cell ${cls}${starCls}${todayCls}" data-tip="${escapeHtml(tipText)}" onclick="openModal('${key}')">${d}${entry.starred?'<span class="cell-star">★</span>':''}</div>`;
+    }
+  }
+  const monthLabel = firstDay.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const isCurrentMonth = year===today.getFullYear()&&month===today.getMonth();
+  const isOldestMonth = db.length>0?(()=>{const [oy,om]=db[db.length-1].date.split('-').map(Number);return year===oy&&month===om-1;})():true;
+  const daysInMonth=lastDay.getDate(); const entries=[];
+  for (let d=1;d<=daysInMonth;d++){const e=getEntry(`${year}-${pad(month+1)}-${pad(d)}`);if(e)entries.push(e);}
+  const goodInMonth=entries.filter(e=>e.good===true).length;
+  const neutralInMonth=entries.filter(e=>e.good===null).length;
+  const badInMonth=entries.filter(e=>e.good===false).length;
+  const pctMonth=entries.length?Math.round(goodInMonth/entries.length*100):null;
+  container.innerHTML = `
+    <div class="section-card">
+      <div class="cal-nav">
+        <button class="cal-arrow" onclick="changeMonth(-1)" ${isOldestMonth?'disabled':''}>‹</button>
+        <div>
+          <div class="cal-month-title">${monthLabel}</div>
+          ${pctMonth!==null?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-top:2px">${goodInMonth} ☀️ · ${neutralInMonth} 🌤️ · ${badInMonth} 🌧️ — ${pctMonth}%</div>`:''}
+        </div>
+        <button class="cal-arrow" onclick="changeMonth(1)" ${isCurrentMonth?'disabled':''}>›</button>
+      </div>
+      <div class="cal-grid">
+        ${dayNames.map(d=>`<div class="cal-day-name">${d}</div>`).join('')}
+        ${cellsHTML}
+      </div>
+      <div class="cal-legend">
+        <span><div class="cl-dot" style="background:var(--green-light);border:1.5px solid rgba(42,122,79,0.25)"></div> Bonne</span>
+        <span><div class="cl-dot" style="background:var(--neutral-light);border:1.5px solid rgba(122,106,42,0.25)"></div> Neutre</span>
+        <span><div class="cl-dot" style="background:var(--red-light);border:1.5px solid rgba(155,46,46,0.25)"></div> Difficile</span>
+        <span><div class="cl-dot" style="background:var(--paper-warm);border:1px solid var(--paper-line)"></div> Non renseigné</span>
+        <span><div class="cl-dot star-dot"></div> Exceptionnelle</span>
+      </div>
+    </div>`;
+}
+
+function changeMonth(dir) {
+  let m=calMonth+dir,y=calYear;
+  if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+  renderCalendar(y,m);
+}
+
+// ─── MODAL ───
+function openModal(key) {
+  const entry=getEntry(key); if(!entry)return;
+  const box=document.getElementById('modalContent');
+  box.innerHTML=`
+    <span class="modal-emoji">${entry.good===true?'☀️':entry.good===null?'🌤️':'🌧️'}</span>
+    <div class="modal-date">${formatDate(key)}</div>
+    <div class="modal-verdict ${entry.good===true?'good':entry.good===null?'neutral':'bad'}">${entry.good===true?'Belle journée':entry.good===null?'Journée neutre':'Journée difficile'}${entry.starred?' <span style="font-size:16px;filter:drop-shadow(0 0 5px var(--star-glow))">⭐</span>':''}</div>
+    ${entry.why?`<div class="modal-why ${entry.good===true?'good-border':entry.good===null?'neutral-border':'bad-border'}">« ${escapeHtml(entry.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic;margin-top:4px">Aucune note.</div>`}
+    <button class="edit-btn" style="margin-top:1rem" onclick="editDay('${key}')">Modifier</button>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))closeModalDirect();}
+function closeModalDirect(){document.getElementById('modalOverlay').classList.remove('open');}
+
+// ─── HISTORY ───
+function renderHistory() {
+  const container=document.getElementById('history-container');
+  if(db.length===0){container.innerHTML=`<div class="empty-state"><div class="big">📖</div>Ton historique apparaîtra ici.</div>`;return;}
+  let filtered=db;
+  if(historyFilter==='good') filtered=db.filter(e=>e.good===true);
+  if(historyFilter==='neutral') filtered=db.filter(e=>e.good===null);
+  if(historyFilter==='bad') filtered=db.filter(e=>e.good===false);
+  const items=filtered.map(e=>`
+    <div class="entry-item" onclick="openModal('${e.date}')">
+      <div class="entry-dot ${e.good===true?'good':e.good===null?'neutral':'bad'}">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</div>
+      <div class="entry-body">
+        <div class="entry-date">${formatDate(e.date)}</div>
+        ${e.why?`<div class="entry-why">« ${escapeHtml(e.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic">Aucune note</div>`}
+      </div>
+    </div>`).join('');
+  container.innerHTML=`
+    <div class="history-controls">
+      <div class="history-filter">
+        <button class="filter-btn ${historyFilter==='all'?'active':''}" onclick="setFilter('all')">Tous</button>
+        <button class="filter-btn ${historyFilter==='good'?'active':''}" onclick="setFilter('good')">☀️ Bonnes</button>
+        <button class="filter-btn ${historyFilter==='bad'?'active':''}" onclick="setFilter('bad')">🌧️ Difficiles</button>
+        <button class="filter-btn ${historyFilter==='neutral'?'active':''}" onclick="setFilter('neutral')">🌤️ Neutres</button>
+      </div>
+      <div class="history-count">${filtered.length} entrée${filtered.length>1?'s':''}</div>
+    </div>
+    <div class="entries-list">${items||'<div class="empty-state" style="padding:2rem 0">Aucune entrée.</div>'}</div>`;
+}
+function setFilter(f){historyFilter=f;renderHistory();}
+
+// ─── SETTINGS ───
+function renderSettings() {
+  const container = document.getElementById('settings-container');
+  container.innerHTML = `
+    <div class="section-card" style="margin-bottom:1rem">
+      <div class="section-title">Exporter mes données</div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:1.25rem">
+        Télécharge toutes tes entrées au format JSON. Tu pourras les réimporter ici à tout moment.
+      </p>
+      <button class="submit-btn" onclick="exportData()" style="max-width:240px">
+        ⬇ Exporter (JSON)
+      </button>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Importer des données</div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:1.25rem">
+        Importe un fichier JSON exporté depuis cette app <strong>ou</strong> depuis l'ancienne version locale.
+        Les entrées existantes ne seront pas écrasées si la date est déjà renseignée.
+      </p>
+      <label style="display:block;width:100%">
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="handleImportFile(event)">
+        <div class="import-drop-zone" id="importDropZone"
+          onclick="document.getElementById('importFileInput').click()"
+          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <div style="font-size:32px;margin-bottom:0.5rem">📂</div>
+          <div style="font-size:14px;font-weight:500;color:var(--ink-muted)">Clique ou glisse un fichier JSON</div>
+          <div style="font-size:12px;color:var(--ink-faint);margin-top:4px">Format app ou format local chiffré</div>
+        </div>
+      </label>
+      <div id="importStatus" style="display:none;margin-top:1rem"></div>
+    </div>`;
+}
+
+// ── EXPORT ──
+function exportData() {
+  if (!db.length) { showToast('⚠ Aucune donnée à exporter'); return; }
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `dailymood-export-${today}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Export téléchargé !');
+}
+
+// ── IMPORT ──
+function onDragOver(e) { e.preventDefault(); document.getElementById('importDropZone').classList.add('drag-over'); }
+function onDragLeave() { document.getElementById('importDropZone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('importDropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processImportFile(file);
+}
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (file) processImportFile(file);
+  e.target.value = '';
+}
+
+async function processImportFile(file) {
+  const statusEl = document.getElementById('importStatus');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = `<div class="loading-msg" style="padding:0.5rem 0;text-align:left">Analyse du fichier…</div>`;
+  try {
+    const text = await file.text();
+    let entries = parseImportFile(text);
+    if (!entries || !entries.length) { showImportStatus('error', '❌ Format non reconnu ou fichier vide.'); return; }
+    const valid = entries.filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+    if (!valid.length) { showImportStatus('error', '❌ Aucune entrée valide trouvée.'); return; }
+    const existingDates = new Set(db.map(e => e.date));
+    const toImport = valid.filter(e => !existingDates.has(e.date));
+    const skipped = valid.length - toImport.length;
+    if (!toImport.length) { showImportStatus('warn', `⚠ ${valid.length} entrée${valid.length>1?'s':''} trouvée${valid.length>1?'s':''}, mais toutes existent déjà. Rien importé.`); return; }
+    showImportStatus('confirm', `
+      <div style="font-size:14px;font-weight:500;margin-bottom:0.75rem">
+        ${valid.length} entrée${valid.length>1?'s':''} trouvée${valid.length>1?'s':''} —
+        <strong style="color:var(--green)">${toImport.length} à importer</strong>${skipped ? `, <span style="color:var(--ink-faint)">${skipped} déjà présente${skipped>1?'s':''}</span>` : ''}.
+      </div>
+      <button class="submit-btn" onclick="confirmImport()" style="max-width:220px">Importer ${toImport.length} entrée${toImport.length>1?'s':''}</button>
+    `, toImport);
+  } catch (err) {
+    showImportStatus('error', '❌ Erreur lors de la lecture : ' + (err.message || err));
+  }
+}
+
+let _pendingImport = [];
+
+function showImportStatus(type, html, pending) {
+  if (pending) _pendingImport = pending;
+  const statusEl = document.getElementById('importStatus');
+  statusEl.style.display = 'block';
+  const bg = type === 'error' ? 'var(--red-light)' : type === 'warn' ? 'var(--gold-light)' : type === 'confirm' ? 'var(--green-light)' : 'var(--paper-warm)';
+  const border = type === 'error' ? 'rgba(155,46,46,0.2)' : type === 'warn' ? 'rgba(184,133,26,0.2)' : type === 'confirm' ? 'rgba(42,122,79,0.2)' : 'var(--paper-line)';
+  statusEl.innerHTML = `<div style="background:${bg};border:1px solid ${border};border-radius:10px;padding:12px 14px">${html}</div>`;
+}
+
+async function confirmImport() {
+  const toImport = _pendingImport;
+  if (!toImport.length) return;
+  showImportStatus('info', `<div class="loading-msg" style="padding:0;text-align:left">Import en cours… (${toImport.length} entrées)</div>`);
+  let ok = 0, fail = 0;
+  for (const entry of toImport) {
+    const record = { date: entry.date, good: entry.good !== undefined ? entry.good : null, why: entry.why || '', starred: !!entry.starred, ts: entry.ts || Date.now() };
+    try { await saveEntry(record); const idx = db.findIndex(e => e.date === record.date); if (idx >= 0) db[idx] = record; else db.push(record); ok++; }
+    catch { fail++; }
+  }
+  db.sort((a, b) => b.date.localeCompare(a.date));
+  _pendingImport = [];
+  if (fail === 0) { showImportStatus('confirm', `✅ ${ok} entrée${ok>1?'s':''} importée${ok>1?'s':''} avec succès !`); showToast(`✓ ${ok} entrée${ok>1?'s':''} importée${ok>1?'s':''} !`); }
+  else { showImportStatus('warn', `⚠ ${ok} importée${ok>1?'s':''}, ${fail} échouée${fail>1?'s':''}. Vérifie ta connexion.`); }
+}
+
+function parseImportFile(text) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+      return Object.entries(parsed).map(([date, val]) => ({ date, ...val }));
+    } catch {}
+  }
+  try {
+    const decoded = atob(trimmed);
+    const bytes = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i);
+    const key = 'dailymood-2026-xk9';
+    const decrypted = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) { decrypted[i] = bytes[i] ^ key.charCodeAt(i % key.length); }
+    const jsonText = new TextDecoder('utf-8').decode(decrypted);
+    const parsed = JSON.parse(jsonText);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+async function bootApp() {
+  document.getElementById('appShell').classList.add('visible');
+  document.getElementById('todayLabel').textContent =
+    new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('form-container').innerHTML = `<div class="loading-msg">Chargement…</div>`;
+  try {
+    await loadFromServer();
+  } catch {
+    showToast('⚠ Impossible de charger les données');
+  }
+  renderDaily(currentDayKey);
+}
+
+async function init() {
+  // 1. Vérifier si on revient d'un lien Supabase (reset mdp ou confirmation email)
+  const hashParams = parseHashParams();
+  if (hashParams && hashParams.access_token) {
+    const type = hashParams.type;
+    clearHash();
+
+    if (type === 'recovery') {
+      // Afficher l'écran de reset mdp
+      resetAccessToken = hashParams.access_token;
+      document.getElementById('resetScreen').classList.add('visible');
+      return;
+    }
+
+    // Confirmation email ou magic link → connexion directe
+    saveSession(hashParams.access_token, hashParams.refresh_token || null);
+    await bootApp();
+    return;
+  }
+
+  // 2. Restaurer la session depuis localStorage
+  const savedToken = getSavedToken();
+  if (savedToken) {
+    authToken = savedToken;
+    try {
+      await bootApp();
+      return;
+    } catch {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) { await bootApp(); return; }
+    }
+  }
+
+  // Pas de session → retour à la page de connexion
+  window.location.replace('/');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModalDirect(); closeDeleteModalDirect(); }
+  if (e.key === 'Enter' && document.getElementById('resetScreen').classList.contains('visible') && document.activeElement?.closest('#resetScreen')) {
+    handleResetPassword();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
