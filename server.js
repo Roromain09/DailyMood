@@ -6,6 +6,7 @@ const https = require('https');
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const INDEX_FILE = path.join(ROOT, 'index.html');
+const APP_FILE = path.join(ROOT, 'app.html');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -46,7 +47,6 @@ function supabaseRequest(method, endpoint, body, extraHeaders = {}) {
   });
 }
 
-// Appel à l'API Admin Supabase (auth/v1/admin/*)
 function supabaseAdmin(method, adminPath, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(`${SUPABASE_URL}/auth/v1/admin/${adminPath}`);
@@ -191,14 +191,12 @@ async function handlePostEntry(req, res) {
   return send(res, 200, { ok: true });
 }
 
-// Supprime toutes les données de l'utilisateur puis son compte auth
 async function handleDeleteAccount(req, res) {
   const token = extractToken(req);
   if (!token) return send(res, 401, { error: 'Missing token' });
   const userId = await verifyToken(token);
   if (!userId) return send(res, 401, { error: 'Invalid token' });
 
-  // 1. Supprimer toutes les entrées de l'utilisateur
   const delEntries = await supabaseRequest(
     'DELETE',
     `mood_entries?user_id=eq.${userId}`,
@@ -210,7 +208,6 @@ async function handleDeleteAccount(req, res) {
     return send(res, 502, { error: 'Impossible de supprimer les données' });
   }
 
-  // 2. Supprimer le compte via l'API Admin Supabase
   const delUser = await supabaseAdmin('DELETE', `users/${userId}`);
   if (delUser.status >= 400) {
     console.error('Failed to delete user:', delUser.body);
@@ -230,20 +227,31 @@ const server = http.createServer(async (req, res) => {
       return res.end();
     }
 
+    // API routes
     if (url.pathname === '/api/entries') {
       if (req.method === 'GET') return await handleGetEntries(req, res);
       if (req.method === 'POST') return await handlePostEntry(req, res);
     }
 
-    // Suppression de compte + données
     if (url.pathname === '/api/account' && req.method === 'DELETE') {
       return await handleDeleteAccount(req, res);
     }
 
     if (url.pathname === '/health') return send(res, 200, { ok: true });
 
+    // Page routes
     if (req.method === 'GET') {
-      if (url.pathname === '/' || url.pathname === '/index.html') return serveStatic(res, INDEX_FILE);
+      // Page de connexion
+      if (url.pathname === '/' || url.pathname === '/index.html') {
+        return serveStatic(res, INDEX_FILE);
+      }
+
+      // App principale (et alias /app.html)
+      if (url.pathname === '/app' || url.pathname === '/app.html') {
+        return serveStatic(res, APP_FILE);
+      }
+
+      // Autres fichiers statiques (fonts, assets…)
       const candidate = path.join(ROOT, decodeURIComponent(url.pathname));
       if (candidate.startsWith(ROOT) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
         return serveStatic(res, candidate);
