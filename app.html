@@ -959,6 +959,26 @@ function moodColorVar(entry) {
   return entry.good === true ? 'var(--green)' : entry.good === null ? 'var(--neutral)' : 'var(--red)';
 }
 
+// Turns a list of {x,y} points into a smooth SVG path (Catmull-Rom → cubic Bézier)
+function smoothPathD(points) {
+  if (points.length < 2) {
+    return points.length === 1 ? `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}` : '';
+  }
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
 function calcStreak() {
   let streak = 0; const today = new Date();
   for (let i = 0; i < 1000; i++) {
@@ -1011,8 +1031,16 @@ function renderMoodChartSVG(period) {
   if (current.length) segments.push(current);
 
   const pathsHTML = segments.map(seg => {
-    const d = seg.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-    return `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const lineD = smoothPathD(seg);
+    if (seg.length < 2) {
+      const p = seg[0];
+      return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="var(--accent)"/>`;
+    }
+    const first = seg[0], last = seg[seg.length - 1];
+    const areaD = `${lineD} L ${last.x.toFixed(1)} ${(padT + innerH).toFixed(1)} L ${first.x.toFixed(1)} ${(padT + innerH).toFixed(1)} Z`;
+    return `
+      <path d="${areaD}" fill="url(#moodChartGradient)" stroke="none"/>
+      <path d="${lineD}" fill="none" stroke="var(--accent)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>`;
   }).join('');
 
   const dotsHTML = showDots ? entries.map((e, i) => {
@@ -1058,6 +1086,12 @@ function renderMoodChartSVG(period) {
 
   return `
     <svg class="mood-chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="moodChartGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.16"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
       ${refLines}
       ${yLabels}
       ${pathsHTML}
