@@ -213,12 +213,12 @@ body::before {
 .header h1 em { font-style: italic; color: var(--gold); }
 
 .header-actions {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: static;          /* ← plus d'absolute */
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
+  margin-bottom: 1rem;       /* ← espace avant la date */
 }
 .logout-btn {
   padding: 6px 14px;
