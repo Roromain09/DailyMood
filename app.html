@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Daily Mood</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -184,10 +185,6 @@ body::before {
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--paper-line);
   position: relative;
-<div style="display:flex;align-items:center;justify-content:center;gap:10px">
-  <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
-  <h1>Mon <em>Daily</em> mood</h1>
-</div>
 }
 .header::after {
   content: '';
@@ -500,6 +497,10 @@ body::before {
       <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
     </div>
     <div class="date-badge" id="todayLabel"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+  <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
+  <h1>Mon <em>Daily</em> mood</h1>
+</div>
     <h1>Mon <em>Daily</em> mood</h1>
   </div>
 
