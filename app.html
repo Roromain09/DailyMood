@@ -214,12 +214,11 @@ body::before {
 .header h1 em { font-style: italic; color: var(--gold); }
 
 .header-actions {
-  position: static;          /* ← plus d'absolute */
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
-  margin-bottom: 1rem;       /* ← espace avant la date */
+  margin-bottom: 1rem;
 }
 .logout-btn {
   padding: 6px 14px;
@@ -405,26 +404,7 @@ body::before {
 .mood-chart-empty { text-align: center; padding: 2rem 0.5rem; color: var(--ink-faint); font-size: 13px; font-style: italic; }
 .mood-chart-point { cursor: pointer; transition: r 0.15s; }
 .mood-chart-point:hover { r: 5.5; }
-.mood-chart-ylabels { display: flex; flex-direction: column; justify-content: space-between; }
 .mood-chart-summary { font-size: 12px; color: var(--ink-faint); margin-top: 10px; text-align: center; }
-
-/* ── TREND ── */
-.trend-widget { display: flex; align-items: center; gap: 1.25rem; background: white; border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 8px var(--shadow); }
-@media (prefers-color-scheme: dark) { .trend-widget { background: var(--paper-warm); } }
-.trend-arrow-wrap { flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
-.trend-arrow-wrap.up { background: var(--green-light); color: var(--green); }
-.trend-arrow-wrap.down { background: var(--red-light); color: var(--red); }
-.trend-arrow-wrap.flat { background: var(--neutral-light); color: var(--neutral); }
-.trend-body { flex: 1; min-width: 0; }
-.trend-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
-.trend-verdict { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; line-height: 1.2; }
-.trend-verdict.up { color: var(--green); }
-.trend-verdict.down { color: var(--red); }
-.trend-verdict.flat { color: var(--neutral); }
-.trend-detail { font-size: 12px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5; }
-.trend-scores { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.trend-score-item { font-size: 11px; color: var(--ink-faint); display: flex; align-items: center; gap: 5px; }
-.trend-score-item .score-val { font-family: 'Lora', serif; font-size: 15px; color: var(--ink-muted); font-weight: 500; min-width: 24px; text-align: right; }
 
 /* ── MODAL ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(28,28,46,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
@@ -468,11 +448,14 @@ body::before {
 </head>
 <body>
 
-<!-- ── RESET PASSWORD SCREEN (retour depuis email Supabase) ── -->
+<!-- ── RESET PASSWORD SCREEN ── -->
 <div class="reset-screen" id="resetScreen">
   <div class="auth-box">
     <div class="auth-logo">
-      <h1>Mon <em>Daily</em> mood</h1>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.5rem">
+        <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
+        <h1>Mon <em>Daily</em> mood</h1>
+      </div>
       <p>Nouveau mot de passe</p>
     </div>
     <div class="auth-field">
@@ -497,11 +480,10 @@ body::before {
       <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
     </div>
     <div class="date-badge" id="todayLabel"></div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px">
-  <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
-  <h1>Mon <em>Daily</em> mood</h1>
-</div>
-    <h1>Mon <em>Daily</em> mood</h1>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+      <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
+      <h1>Mon <em>Daily</em> mood</h1>
+    </div>
   </div>
 
   <div class="nav-tabs">
@@ -964,7 +946,6 @@ function moodColorVar(entry) {
   return entry.good === true ? 'var(--green)' : entry.good === null ? 'var(--neutral)' : 'var(--red)';
 }
 
-// Turns a list of {x,y} points into a smooth SVG path (Catmull-Rom → cubic Bézier)
 function smoothPathD(points) {
   if (points.length < 2) {
     return points.length === 1 ? `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}` : '';
@@ -994,7 +975,6 @@ function calcStreak() {
   return streak;
 }
 
-// ─── MOOD LINE CHART (7 / 14 / 30 / 365 jours) ───
 function setChartPeriod(period) {
   chartPeriod = period;
   const container = document.getElementById('moodChartContainer');
@@ -1022,7 +1002,6 @@ function renderMoodChartSVG(period) {
   function xAt(i) { return n === 1 ? padL + innerW / 2 : padL + (i / (n - 1)) * innerW; }
   function yAt(score) { return padT + (2 - score) / 2 * innerH; }
 
-  // build path segments, breaking at gaps (missing entries)
   let segments = [];
   let current = [];
   entries.forEach((e, i) => {
@@ -1055,7 +1034,6 @@ function renderMoodChartSVG(period) {
     return `<circle class="mood-chart-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${moodColorVar(e)}" stroke="white" stroke-width="1.5" onclick="openModal('${e.date}')"><title>${escapeHtml(formatDate(e.date, true))} — ${escapeHtml(tip)}</title></circle>`;
   }).join('') : '';
 
-  // reference lines for good / neutral / bad levels
   const refLines = [0, 1, 2].map(s => {
     const y = yAt(s);
     return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="var(--paper-line)" stroke-width="1" stroke-dasharray="3,4"/>`;
@@ -1066,7 +1044,6 @@ function renderMoodChartSVG(period) {
     <text x="${padL - 8}" y="${yAt(1)+4}" text-anchor="end" font-size="10" fill="var(--neutral)" font-family="Outfit, sans-serif">🌤️</text>
     <text x="${padL - 8}" y="${yAt(0)+4}" text-anchor="end" font-size="10" fill="var(--red)" font-family="Outfit, sans-serif">🌧️</text>`;
 
-  // x-axis date labels: show a handful, evenly spaced
   let xLabelsHTML = '';
   if (showLabels) {
     const step = n <= 8 ? 1 : Math.ceil(n / 6);
@@ -1075,7 +1052,6 @@ function renderMoodChartSVG(period) {
       xLabelsHTML += `<text x="${x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="var(--ink-faint)" font-family="Outfit, sans-serif">${escapeHtml(formatDate(keys[i], true))}</text>`;
     }
   } else {
-    // sparse labels for long ranges (365j) — show ~6 month markers
     const step = Math.ceil(n / 6);
     for (let i = 0; i < n; i += step) {
       const [y, m] = keys[i].split('-').map(Number);
@@ -1454,26 +1430,22 @@ async function bootApp() {
 }
 
 async function init() {
-  // 1. Vérifier si on revient d'un lien Supabase (reset mdp ou confirmation email)
   const hashParams = parseHashParams();
   if (hashParams && hashParams.access_token) {
     const type = hashParams.type;
     clearHash();
 
     if (type === 'recovery') {
-      // Afficher l'écran de reset mdp
       resetAccessToken = hashParams.access_token;
       document.getElementById('resetScreen').classList.add('visible');
       return;
     }
 
-    // Confirmation email ou magic link → connexion directe
     saveSession(hashParams.access_token, hashParams.refresh_token || null);
     await bootApp();
     return;
   }
 
-  // 2. Restaurer la session depuis localStorage
   const savedToken = getSavedToken();
   if (savedToken) {
     authToken = savedToken;
@@ -1486,7 +1458,6 @@ async function init() {
     }
   }
 
-  // Pas de session → retour à la page de connexion
   window.location.replace('/');
 }
 
