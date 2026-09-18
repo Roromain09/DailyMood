@@ -208,12 +208,12 @@ body::before {
 
 <div class="auth-box">
   <div class="auth-logo">
-  <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.5rem">
-    <img src="/logo.png" alt="Logo" style="width:36px;height:36px;object-fit:contain">
-    <h1>Mon <em>Daily</em> mood</h1>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.5rem">
+      <img src="/logo.png" alt="Logo" style="width:36px;height:36px;object-fit:contain">
+      <h1>Mon <em>Daily</em> mood</h1>
+    </div>
+    <p>Ton journal de bien-être quotidien</p>
   </div>
-  <p>Ton journal de bien-être quotidien</p>
-</div>
 
   <!-- Tabs : Connexion / Créer un compte -->
   <div class="auth-tabs" id="authTabsRow">
@@ -274,8 +274,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const TOKEN_KEY = 'dm_token';
 const REFRESH_KEY = 'dm_refresh';
 
-// L'URL de l'app pour les redirections Supabase pointe vers /app
-// (reset mdp, confirmation email)
 function getAppUrl() {
   return window.location.origin + '/app';
 }
@@ -345,13 +343,11 @@ async function handleSignup() {
     errEl.classList.add('visible');
     return;
   }
-  // Compte créé sans confirmation email → connexion directe
   if (data.access_token) {
     saveSession(data.access_token, data.refresh_token);
     window.location.href = '/app';
     return;
   }
-  // Confirmation email requise
   successEl.classList.add('visible');
 }
 
@@ -386,7 +382,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Si déjà connecté → rediriger vers l'app directement
 (function() {
   try {
     const token = localStorage.getItem('dm_token');
