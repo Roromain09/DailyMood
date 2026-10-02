@@ -170,33 +170,16 @@ body::before {
 
 /* ── APP ── */
 .app {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 5rem;
   position: relative;
   z-index: 1;
+  min-height: 100vh;
   display: none;
 }
-.app.visible { display: block; }
+.app.visible {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
 
-.header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--paper-line);
-  position: relative;
-}
-.header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 2px;
-  background: var(--gold);
-  border-radius: 2px;
-}
 .date-badge {
   display: inline-block;
   font-size: 11px;
@@ -210,16 +193,7 @@ body::before {
   margin-bottom: 0.75rem;
   border: 1px solid rgba(184,133,26,0.2);
 }
-.header h1 { font-family: 'Lora', serif; font-size: 30px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
-.header h1 em { font-style: italic; color: var(--gold); }
 
-.header-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
 .logout-btn {
   padding: 6px 14px;
   border: 1.5px solid var(--paper-line);
@@ -444,6 +418,74 @@ body::before {
 }
 .import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
 .import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.25rem 1.5rem;
+  background: var(--paper-warm);
+  border-right: 1px solid var(--paper-line);
+}
+.sidebar-brand {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--paper-line);
+}
+.sidebar-brand img {
+  width: min(200px, 85%);
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+.sidebar-brand h1 { font-family: 'Lora', serif; font-size: 24px; font-weight: 400; line-height: 1.2; }
+.sidebar-brand h1 em { font-style: italic; color: var(--gold); }
+
+.sidebar .nav-tabs {
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar .nav-tab { text-align: left; padding: 12px 14px; font-size: 14px; }
+
+.sidebar-footer { margin-top: auto; display: flex; gap: 8px; }
+.sidebar-footer .logout-btn { flex: 1; }
+.sidebar-footer .delete-account-btn { flex: 0 0 auto; }
+
+/* ── CONTENU ── */
+.main { padding: 2.5rem 3rem 5rem; width: 100%; max-width: 1000px; }
+.main .date-badge { margin-bottom: 1.75rem; }
+.daily-card { padding: 2.5rem; }
+.question { font-size: 28px; }
+.choice-btn { padding: 28px 12px; }
+.choice-btn .emoji { font-size: 40px; }
+#calendar-container .section-card { max-width: 760px; }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  .app.visible { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; padding: 1.25rem 1rem; border-right: none; border-bottom: 1px solid var(--paper-line); }
+  .sidebar-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 1rem; padding-bottom: 0; border-bottom: none; }
+  .sidebar-brand img { width: 40px; margin-bottom: 0; }
+  .sidebar-brand h1 { font-size: 20px; }
+  .sidebar .nav-tabs { flex-direction: row; gap: 3px; background: var(--paper); border: 1px solid var(--paper-line); padding: 4px; }
+  .sidebar .nav-tab { text-align: center; padding: 9px 4px; font-size: 12px; }
+  .tab-txt { display: none; }
+  .sidebar-footer { margin-top: 1rem; justify-content: flex-end; }
+  .sidebar-footer .logout-btn { flex: 0 0 auto; }
+  .main { padding: 1.5rem 1rem 4rem; }
+  .daily-card { padding: 1.5rem; }
+  .question { font-size: 23px; }
+  .choice-btn { padding: 20px 12px; }
+  .choice-btn .emoji { font-size: 32px; }
+}
 </style>
 </head>
 <body>
@@ -474,31 +516,37 @@ body::before {
 
 <!-- ── APP ── -->
 <div class="app" id="appShell">
-  <div class="header">
-    <div class="header-actions">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="/logo.png" alt="Logo">
+      <h1>Mon <em>Daily</em> mood</h1>
+    </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
+      <button class="nav-tab" onclick="showPage('stats')">Stats</button>
+      <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
+      <button class="nav-tab" onclick="showPage('history')">Historique</button>
+      <button class="nav-tab" onclick="showPage('settings')">⚙<span class="tab-txt"> Réglages</span></button>
+    </nav>
+
+    <div class="sidebar-footer">
       <button class="logout-btn delete-account-btn" onclick="openDeleteModal()" title="Supprimer mon compte">🗑</button>
       <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
     </div>
+  </aside>
+
+  <main class="main">
     <div class="date-badge" id="todayLabel"></div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-      <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
-      <h1>Mon <em>Daily</em> mood</h1>
-    </div>
-  </div>
 
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
-    <button class="nav-tab" onclick="showPage('stats')">Stats</button>
-    <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
-    <button class="nav-tab" onclick="showPage('history')">Historique</button>
-    <button class="nav-tab" onclick="showPage('settings')">⚙</button>
-  </div>
+    <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
+    <div id="page-stats" class="page"><div id="stats-container"></div></div>
+    <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
+    <div id="page-history" class="page"><div id="history-container"></div></div>
+    <div id="page-settings" class="page"><div id="settings-container"></div></div>
+  </main>
 
-  <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
-  <div id="page-stats" class="page"><div id="stats-container"></div></div>
-  <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
-  <div id="page-history" class="page"><div id="history-container"></div></div>
-  <div id="page-settings" class="page"><div id="settings-container"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
