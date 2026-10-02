@@ -116,9 +116,9 @@ body::before {
   background: white;
   border: 1px solid var(--paper-line);
   border-radius: var(--radius);
-  padding: 2.5rem 2rem;
+  padding: 3rem 2.75rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   box-shadow: 0 4px 32px var(--shadow-md);
 }
 @media (prefers-color-scheme: dark) { .auth-box { background: var(--paper-warm); } }
@@ -130,6 +130,7 @@ body::before {
   .auth-brand img { width: 90px; margin-bottom: 1rem; }
   .auth-brand h1 { font-size: 26px; }
   .auth-brand p { font-size: 13px; }
+  .auth-box { padding: 2rem 1.5rem; }
 }
 
 /* ── FORMULAIRES ── */
@@ -140,16 +141,16 @@ body::before {
   border: 1px solid var(--paper-line);
   border-radius: 10px;
   padding: 3px;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2.25rem;
 }
 .auth-tab {
   flex: 1;
-  padding: 8px;
+  padding: 11px;
   border: none;
   background: transparent;
   border-radius: 8px;
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--ink-muted);
   cursor: pointer;
@@ -163,16 +164,16 @@ body::before {
 }
 @media (prefers-color-scheme: dark) { .auth-tab.active { background: var(--paper-line); } }
 
-.auth-field { margin-bottom: 1rem; }
-.auth-field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-faint); margin-bottom: 6px; letter-spacing: 0.05em; }
+.auth-field { margin-bottom: 1.25rem; }
+.auth-field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-faint); margin-bottom: 6px; letter-spacing: 0.05em; }
 .auth-input {
   width: 100%;
-  padding: 11px 14px;
+  padding: 14px 16px;
   border: 1.5px solid var(--paper-line);
   border-radius: 10px;
   background: var(--paper);
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -182,13 +183,13 @@ body::before {
 
 .auth-btn {
   width: 100%;
-  padding: 13px;
+  padding: 16px;
   background: var(--ink);
   color: var(--paper);
   border: none;
   border-radius: 10px;
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
@@ -200,8 +201,8 @@ body::before {
 .auth-link {
   display: block;
   text-align: center;
-  margin-top: 0.85rem;
-  font-size: 12px;
+  margin-top: 1.1rem;
+  font-size: 13px;
   color: var(--ink-faint);
   cursor: pointer;
   text-decoration: underline;
