@@ -56,10 +56,6 @@ body {
   background: var(--paper);
   color: var(--ink);
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -73,6 +69,49 @@ body::before {
   opacity: 0.5;
 }
 
+/* ── LAYOUT 2 COLONNES ── */
+.auth-layout {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Colonne gauche : logo */
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--paper-warm);
+  border-right: 1px solid var(--paper-line);
+}
+.auth-brand img {
+  width: min(300px, 60%);
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 2rem;
+}
+.auth-brand h1 {
+  font-family: 'Lora', serif;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+.auth-brand h1 em { font-style: italic; color: var(--gold); }
+.auth-brand p { font-size: 15px; color: var(--ink-faint); margin-top: 10px; }
+
+/* Colonne droite : formulaire */
+.auth-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
 .auth-box {
   background: white;
   border: 1px solid var(--paper-line);
@@ -81,23 +120,19 @@ body::before {
   width: 100%;
   max-width: 400px;
   box-shadow: 0 4px 32px var(--shadow-md);
-  position: relative;
-  z-index: 1;
 }
 @media (prefers-color-scheme: dark) { .auth-box { background: var(--paper-warm); } }
 
-.auth-logo {
-  text-align: center;
-  margin-bottom: 2rem;
+/* Mobile : on empile */
+@media (max-width: 800px) {
+  .auth-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-brand { padding: 2rem 1.5rem 1.5rem; border-right: none; border-bottom: 1px solid var(--paper-line); }
+  .auth-brand img { width: 90px; margin-bottom: 1rem; }
+  .auth-brand h1 { font-size: 26px; }
+  .auth-brand p { font-size: 13px; }
 }
-.auth-logo h1 {
-  font-family: 'Lora', serif;
-  font-size: 26px;
-  font-weight: 400;
-}
-.auth-logo h1 em { font-style: italic; color: var(--gold); }
-.auth-logo p { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
 
+/* ── FORMULAIRES ── */
 .auth-tabs {
   display: flex;
   gap: 3px;
@@ -206,66 +241,74 @@ body::before {
 </head>
 <body>
 
-<div class="auth-box">
-  <div class="auth-logo">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0.5rem">
-      <img src="/logo.png" alt="Logo" style="width:36px;height:36px;object-fit:contain">
-      <h1>Mon <em>Daily</em> mood</h1>
-    </div>
+<div class="auth-layout">
+
+  <!-- Gauche : logo -->
+  <div class="auth-brand">
+    <img src="/logo.png" alt="Logo">
+    <h1>Mon <em>Daily</em> mood</h1>
     <p>Ton journal de bien-être quotidien</p>
   </div>
 
-  <!-- Tabs : Connexion / Créer un compte -->
-  <div class="auth-tabs" id="authTabsRow">
-    <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Connexion</button>
-    <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Créer un compte</button>
-  </div>
+  <!-- Droite : formulaire -->
+  <div class="auth-side">
+    <div class="auth-box">
 
-  <!-- CONNEXION -->
-  <div id="authLoginForm">
-    <div class="auth-field">
-      <label>Adresse e-mail</label>
-      <input class="auth-input" type="email" id="loginEmail" placeholder="toi@exemple.com" autocomplete="email">
-    </div>
-    <div class="auth-field">
-      <label>Mot de passe</label>
-      <input class="auth-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Se connecter</button>
-    <button class="auth-link" onclick="switchAuthTab('forgot')">Mot de passe oublié ?</button>
-    <div class="auth-error" id="loginError"></div>
-  </div>
+      <!-- Tabs : Connexion / Créer un compte -->
+      <div class="auth-tabs" id="authTabsRow">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Connexion</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Créer un compte</button>
+      </div>
 
-  <!-- INSCRIPTION -->
-  <div id="authSignupForm" style="display:none">
-    <div class="auth-field">
-      <label>Adresse e-mail</label>
-      <input class="auth-input" type="email" id="signupEmail" placeholder="toi@exemple.com" autocomplete="email">
-    </div>
-    <div class="auth-field">
-      <label>Mot de passe</label>
-      <input class="auth-input" type="password" id="signupPassword" placeholder="8 caractères minimum" autocomplete="new-password">
-    </div>
-    <button class="auth-btn" id="signupBtn" onclick="handleSignup()">Créer mon compte</button>
-    <div class="auth-error" id="signupError"></div>
-    <div class="auth-success" id="signupSuccess">Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.</div>
-  </div>
+      <!-- CONNEXION -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <label>Adresse e-mail</label>
+          <input class="auth-input" type="email" id="loginEmail" placeholder="toi@exemple.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input class="auth-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Se connecter</button>
+        <button class="auth-link" onclick="switchAuthTab('forgot')">Mot de passe oublié ?</button>
+        <div class="auth-error" id="loginError"></div>
+      </div>
 
-  <!-- MOT DE PASSE OUBLIÉ -->
-  <div id="authForgotForm" style="display:none">
-    <p style="font-size:13px;color:var(--ink-muted);margin-bottom:1.25rem;line-height:1.6">
-      Saisis ton adresse e-mail et on t'envoie un lien pour réinitialiser ton mot de passe.
-    </p>
-    <div class="auth-field">
-      <label>Adresse e-mail</label>
-      <input class="auth-input" type="email" id="forgotEmail" placeholder="toi@exemple.com" autocomplete="email">
-    </div>
-    <button class="auth-btn" id="forgotBtn" onclick="handleForgotPassword()">Envoyer le lien</button>
-    <button class="auth-link" onclick="switchAuthTab('login')">← Retour à la connexion</button>
-    <div class="auth-error" id="forgotError"></div>
-    <div class="auth-success" id="forgotSuccess">Lien envoyé ! Vérifie ta boîte mail (et tes spams).</div>
-  </div>
-</div>
+      <!-- INSCRIPTION -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <label>Adresse e-mail</label>
+          <input class="auth-input" type="email" id="signupEmail" placeholder="toi@exemple.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input class="auth-input" type="password" id="signupPassword" placeholder="8 caractères minimum" autocomplete="new-password">
+        </div>
+        <button class="auth-btn" id="signupBtn" onclick="handleSignup()">Créer mon compte</button>
+        <div class="auth-error" id="signupError"></div>
+        <div class="auth-success" id="signupSuccess">Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.</div>
+      </div>
+
+      <!-- MOT DE PASSE OUBLIÉ -->
+      <div id="authForgotForm" style="display:none">
+        <p style="font-size:13px;color:var(--ink-muted);margin-bottom:1.25rem;line-height:1.6">
+          Saisis ton adresse e-mail et on t'envoie un lien pour réinitialiser ton mot de passe.
+        </p>
+        <div class="auth-field">
+          <label>Adresse e-mail</label>
+          <input class="auth-input" type="email" id="forgotEmail" placeholder="toi@exemple.com" autocomplete="email">
+        </div>
+        <button class="auth-btn" id="forgotBtn" onclick="handleForgotPassword()">Envoyer le lien</button>
+        <button class="auth-link" onclick="switchAuthTab('login')">← Retour à la connexion</button>
+        <div class="auth-error" id="forgotError"></div>
+        <div class="auth-success" id="forgotSuccess">Lien envoyé ! Vérifie ta boîte mail (et tes spams).</div>
+      </div>
+
+    </div><!-- fin .auth-box -->
+  </div><!-- fin .auth-side -->
+
+</div><!-- fin .auth-layout -->
 
 <script>
 const SUPABASE_URL = 'https://hjvlwzcvstniapdrzajq.supabase.co';
