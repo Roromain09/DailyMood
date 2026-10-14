@@ -170,33 +170,16 @@ body::before {
 
 /* ── APP ── */
 .app {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 5rem;
   position: relative;
   z-index: 1;
+  min-height: 100vh;
   display: none;
 }
-.app.visible { display: block; }
+.app.visible {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
 
-.header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--paper-line);
-  position: relative;
-}
-.header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 2px;
-  background: var(--gold);
-  border-radius: 2px;
-}
 .date-badge {
   display: inline-block;
   font-size: 11px;
@@ -210,16 +193,7 @@ body::before {
   margin-bottom: 0.75rem;
   border: 1px solid rgba(184,133,26,0.2);
 }
-.header h1 { font-family: 'Lora', serif; font-size: 30px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
-.header h1 em { font-style: italic; color: var(--gold); }
 
-.header-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
 .logout-btn {
   padding: 6px 14px;
   border: 1.5px solid var(--paper-line);
@@ -234,32 +208,6 @@ body::before {
 .logout-btn:hover { border-color: var(--ink-faint); color: var(--ink); background: var(--paper-warm); }
 .delete-account-btn { padding: 6px 10px; color: var(--ink-faint); }
 .delete-account-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
-
-/* ── BLUR NOTES ── */
-.blur-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--paper-line);
-  border-radius: 20px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  color: var(--ink-faint);
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s;
-}
-.blur-toggle:hover { border-color: var(--ink-faint); color: var(--ink); }
-.blur-toggle:has(input:checked) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-.blur-toggle input { accent-color: var(--accent); cursor: pointer; }
-
-.note-text, .entry-why, .modal-why, .already-done p, .why-input { transition: filter 0.2s; }
-body.blur-notes .note-text,
-body.blur-notes .entry-why,
-body.blur-notes .modal-why,
-body.blur-notes .already-done p,
-body.blur-notes .why-input:not(:focus) { filter: blur(6px); user-select: none; }
 
 /* ── NAV ── */
 .nav-tabs { display: flex; gap: 3px; background: var(--paper-warm); border: 1px solid var(--paper-line); border-radius: 12px; padding: 4px; margin-bottom: 2rem; }
@@ -291,7 +239,7 @@ body.blur-notes .why-input:not(:focus) { filter: blur(6px); user-select: none; }
 .choice-btn.selected-no .emoji { transform: scale(1.15); }
 
 .why-label { font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-bottom: 8px; }
-.why-input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--paper-line); border-radius: 10px; background: var(--paper); font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--ink); resize: none; line-height: 1.65; outline: none; transition: border-color 0.2s, box-shadow 0.2s, filter 0.2s; margin-bottom: 1.5rem; }
+.why-input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--paper-line); border-radius: 10px; background: var(--paper); font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--ink); resize: none; line-height: 1.65; outline: none; transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 1.5rem; }
 .why-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
 .why-input::placeholder { color: var(--ink-faint); }
 
@@ -470,6 +418,74 @@ body.blur-notes .why-input:not(:focus) { filter: blur(6px); user-select: none; }
 }
 .import-drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
 .import-drop-zone.drag-over { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.25rem 1.5rem;
+  background: var(--paper-warm);
+  border-right: 1px solid var(--paper-line);
+}
+.sidebar-brand {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--paper-line);
+}
+.sidebar-brand img {
+  width: min(200px, 85%);
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+.sidebar-brand h1 { font-family: 'Lora', serif; font-size: 24px; font-weight: 400; line-height: 1.2; }
+.sidebar-brand h1 em { font-style: italic; color: var(--gold); }
+
+.sidebar .nav-tabs {
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar .nav-tab { text-align: left; padding: 12px 14px; font-size: 14px; }
+
+.sidebar-footer { margin-top: auto; display: flex; gap: 8px; }
+.sidebar-footer .logout-btn { flex: 1; }
+.sidebar-footer .delete-account-btn { flex: 0 0 auto; }
+
+/* ── CONTENU ── */
+.main { padding: 2.5rem 3rem 5rem; width: 100%; max-width: 1000px; }
+.main .date-badge { margin-bottom: 1.75rem; }
+.daily-card { padding: 2.5rem; }
+.question { font-size: 28px; }
+.choice-btn { padding: 28px 12px; }
+.choice-btn .emoji { font-size: 40px; }
+#calendar-container .section-card { max-width: 760px; }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  .app.visible { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; padding: 1.25rem 1rem; border-right: none; border-bottom: 1px solid var(--paper-line); }
+  .sidebar-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 1rem; padding-bottom: 0; border-bottom: none; }
+  .sidebar-brand img { width: 40px; margin-bottom: 0; }
+  .sidebar-brand h1 { font-size: 20px; }
+  .sidebar .nav-tabs { flex-direction: row; gap: 3px; background: var(--paper); border: 1px solid var(--paper-line); padding: 4px; }
+  .sidebar .nav-tab { text-align: center; padding: 9px 4px; font-size: 12px; }
+  .tab-txt { display: none; }
+  .sidebar-footer { margin-top: 1rem; justify-content: flex-end; }
+  .sidebar-footer .logout-btn { flex: 0 0 auto; }
+  .main { padding: 1.5rem 1rem 4rem; }
+  .daily-card { padding: 1.5rem; }
+  .question { font-size: 23px; }
+  .choice-btn { padding: 20px 12px; }
+  .choice-btn .emoji { font-size: 32px; }
+}
 </style>
 </head>
 <body>
@@ -500,35 +516,37 @@ body.blur-notes .why-input:not(:focus) { filter: blur(6px); user-select: none; }
 
 <!-- ── APP ── -->
 <div class="app" id="appShell">
-  <div class="header">
-    <div class="header-actions">
-      <label class="blur-toggle" title="Flouter les notes">
-        <input type="checkbox" id="blurToggle" onchange="setBlurNotes(this.checked)">
-        <span>🙈 Flouter</span>
-      </label>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="/logo.png" alt="Logo">
+      <h1>Mon <em>Daily</em> mood</h1>
+    </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
+      <button class="nav-tab" onclick="showPage('stats')">Stats</button>
+      <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
+      <button class="nav-tab" onclick="showPage('history')">Historique</button>
+      <button class="nav-tab" onclick="showPage('settings')">⚙<span class="tab-txt"> Réglages</span></button>
+    </nav>
+
+    <div class="sidebar-footer">
       <button class="logout-btn delete-account-btn" onclick="openDeleteModal()" title="Supprimer mon compte">🗑</button>
       <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
     </div>
+  </aside>
+
+  <main class="main">
     <div class="date-badge" id="todayLabel"></div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-      <img src="/logo.png" alt="Logo" style="width:32px;height:32px;object-fit:contain">
-      <h1>Mon <em>Daily</em> mood</h1>
-    </div>
-  </div>
 
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('daily')">✦ Aujourd'hui</button>
-    <button class="nav-tab" onclick="showPage('stats')">Stats</button>
-    <button class="nav-tab" onclick="showPage('calendar')">Calendrier</button>
-    <button class="nav-tab" onclick="showPage('history')">Historique</button>
-    <button class="nav-tab" onclick="showPage('settings')">⚙</button>
-  </div>
+    <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
+    <div id="page-stats" class="page"><div id="stats-container"></div></div>
+    <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
+    <div id="page-history" class="page"><div id="history-container"></div></div>
+    <div id="page-settings" class="page"><div id="settings-container"></div></div>
+  </main>
 
-  <div id="page-daily" class="page active"><div id="form-container"><div class="loading-msg">Chargement…</div></div></div>
-  <div id="page-stats" class="page"><div id="stats-container"></div></div>
-  <div id="page-calendar" class="page"><div id="calendar-container"></div></div>
-  <div id="page-history" class="page"><div id="history-container"></div></div>
-  <div id="page-settings" class="page"><div id="settings-container"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -836,28 +854,6 @@ function escapeHtml(str) {
 }
 
 // ─────────────────────────────────────────────
-// BLUR NOTES
-// ─────────────────────────────────────────────
-const BLUR_KEY = 'dm_blur_notes';
-let blurNotes = false;
-try { blurNotes = localStorage.getItem(BLUR_KEY) === '1'; } catch {}
-
-function applyBlur() {
-  document.body.classList.toggle('blur-notes', blurNotes);
-  const cb = document.getElementById('blurToggle');
-  if (cb) cb.checked = blurNotes;
-}
-
-function setBlurNotes(v) {
-  blurNotes = v;
-  try { localStorage.setItem(BLUR_KEY, v ? '1' : '0'); } catch {}
-  applyBlur();
-  // Les tooltips (calendrier, graphique) sont générés en JS : on les re-rend
-  if (document.getElementById('page-stats').classList.contains('active')) renderStats();
-  if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
-}
-
-// ─────────────────────────────────────────────
 // PAGES
 // ─────────────────────────────────────────────
 function showPage(name) {
@@ -1082,7 +1078,7 @@ function renderMoodChartSVG(period) {
   const dotsHTML = showDots ? entries.map((e, i) => {
     if (!e) return '';
     const x = xAt(i), y = yAt(moodScore(e));
-    const tip = (e.why && !blurNotes ? e.why : (e.good===true?'Bonne journée':e.good===null?'Journée neutre':'Journée difficile')) + (e.starred ? ' ⭐' : '');
+    const tip = (e.why ? e.why : (e.good===true?'Bonne journée':e.good===null?'Journée neutre':'Journée difficile')) + (e.starred ? ' ⭐' : '');
     return `<circle class="mood-chart-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${moodColorVar(e)}" stroke="white" stroke-width="1.5" onclick="openModal('${e.date}')"><title>${escapeHtml(formatDate(e.date, true))} — ${escapeHtml(tip)}</title></circle>`;
   }).join('') : '';
 
@@ -1237,7 +1233,7 @@ function renderCalendar(year, month) {
       const cls=entry.good===true?'good-day':entry.good===false?'bad-day':'neutral-day';
       const starCls=entry.starred?' starred-day':'';
       const tipBase=entry.good===true?'✓ Bonne journée':entry.good===null?'○ Journée neutre':'✗ Journée difficile';
-      const tipText=(entry.why && !blurNotes ? '« '+entry.why+' »' : tipBase)+(entry.starred?' ⭐':'');
+      const tipText=(entry.why?'« '+entry.why+' »':tipBase)+(entry.starred?' ⭐':'');
       cellsHTML+=`<div class="cal-cell ${cls}${starCls}${todayCls}" data-tip="${escapeHtml(tipText)}" onclick="openModal('${key}')">${d}${entry.starred?'<span class="cell-star">★</span>':''}</div>`;
     }
   }
@@ -1470,7 +1466,6 @@ function parseImportFile(text) {
 // ─────────────────────────────────────────────
 async function bootApp() {
   document.getElementById('appShell').classList.add('visible');
-  applyBlur();
   document.getElementById('todayLabel').textContent =
     new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
   document.getElementById('form-container').innerHTML = `<div class="loading-msg">Chargement…</div>`;
