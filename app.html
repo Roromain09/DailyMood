@@ -459,6 +459,24 @@ body::before {
 .sidebar-footer .logout-btn { flex: 1; }
 .sidebar-footer .delete-account-btn { flex: 0 0 auto; }
 
+/* ── BLUR NOTES ── */
+.blur-toggle {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: auto; margin-bottom: 0.75rem;
+  padding: 10px 14px;
+  border: 1.5px solid var(--paper-line); border-radius: 10px;
+  font-size: 13px; color: var(--ink-muted);
+  cursor: pointer; user-select: none; transition: all 0.2s;
+}
+.blur-toggle:hover { border-color: var(--ink-faint); color: var(--ink); }
+.blur-toggle input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+.blur-toggle + .sidebar-footer { margin-top: 0; }
+
+.private-note { transition: filter 0.2s; }
+.blur-notes .private-note { filter: blur(6px); user-select: none; }
+.blur-notes .why-input:not(:focus) { filter: blur(6px); }
+.why-input { transition: filter 0.2s, border-color 0.2s, box-shadow 0.2s; }
+
 /* ── CONTENU ── */
 .main { padding: 2.5rem 3rem 5rem; width: 100%; max-width: 1000px; }
 .main .date-badge { margin-bottom: 1.75rem; }
@@ -480,6 +498,8 @@ body::before {
   .tab-txt { display: none; }
   .sidebar-footer { margin-top: 1rem; justify-content: flex-end; }
   .sidebar-footer .logout-btn { flex: 0 0 auto; }
+  .blur-toggle { margin-top: 1rem; margin-bottom: 0; }
+  .blur-toggle + .sidebar-footer { margin-top: 0.75rem; }
   .main { padding: 1.5rem 1rem 4rem; }
   .daily-card { padding: 1.5rem; }
   .question { font-size: 23px; }
@@ -530,6 +550,11 @@ body::before {
       <button class="nav-tab" onclick="showPage('history')">Historique</button>
       <button class="nav-tab" onclick="showPage('settings')">⚙<span class="tab-txt"> Réglages</span></button>
     </nav>
+
+    <label class="blur-toggle">
+      <input type="checkbox" id="blurNotesToggle" onchange="toggleBlurNotes(this.checked)">
+      <span>🙈 Flouter les notes</span>
+    </label>
 
     <div class="sidebar-footer">
       <button class="logout-btn delete-account-btn" onclick="openDeleteModal()" title="Supprimer mon compte">🗑</button>
@@ -804,6 +829,26 @@ let calYear, calMonth;
 let currentDayKey = todayKey();
 let chartPeriod = 30;
 
+// ── Flou des notes ──
+let blurNotes = false;
+try { blurNotes = localStorage.getItem('dm_blur_notes') === '1'; } catch {}
+
+function syncBlurUI() {
+  document.body.classList.toggle('blur-notes', blurNotes);
+  const cb = document.getElementById('blurNotesToggle');
+  if (cb) cb.checked = blurNotes;
+}
+
+function toggleBlurNotes(checked) {
+  blurNotes = checked;
+  try { localStorage.setItem('dm_blur_notes', checked ? '1' : '0'); } catch {}
+  syncBlurUI();
+  // Re-render les pages dont les infobulles dépendent de l'état
+  // (pas "daily" : le CSS suffit, et ça évite de perdre une saisie en cours)
+  if (document.getElementById('page-stats').classList.contains('active')) renderStats();
+  if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
+}
+
 function pad(n) { return String(n).padStart(2,'0'); }
 function todayKey() {
   const d = new Date();
@@ -893,7 +938,7 @@ function renderDaily(key = todayKey()) {
       <div class="already-done">
         <span class="big-emoji">${emoji}</span>
         <h2>${label}</h2>
-        <p>${existing.why ? '« '+escapeHtml(existing.why)+' »' : 'Aucun commentaire ajouté.'}</p>
+        <p class="private-note">${existing.why ? '« '+escapeHtml(existing.why)+' »' : 'Aucun commentaire ajouté.'}</p>
         <button class="edit-btn" onclick="editDay('${key}')">Modifier cette journée</button>
         ${!isToday ? `<button class="edit-btn" style="margin-left:8px" onclick="backToToday()">Retour à aujourd'hui</button>` : ''}
       </div>`;
@@ -1078,7 +1123,7 @@ function renderMoodChartSVG(period) {
   const dotsHTML = showDots ? entries.map((e, i) => {
     if (!e) return '';
     const x = xAt(i), y = yAt(moodScore(e));
-    const tip = (e.why ? e.why : (e.good===true?'Bonne journée':e.good===null?'Journée neutre':'Journée difficile')) + (e.starred ? ' ⭐' : '');
+    const tip = (e.why && !blurNotes ? e.why : (e.good===true?'Bonne journée':e.good===null?'Journée neutre':'Journée difficile')) + (e.starred ? ' ⭐' : '');
     return `<circle class="mood-chart-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${moodColorVar(e)}" stroke="white" stroke-width="1.5" onclick="openModal('${e.date}')"><title>${escapeHtml(formatDate(e.date, true))} — ${escapeHtml(tip)}</title></circle>`;
   }).join('') : '';
 
@@ -1158,7 +1203,7 @@ function renderStats() {
   const withWhy = db.filter(e => e.why).slice(0,5);
   const notesHTML = withWhy.length === 0
     ? `<p style="color:var(--ink-faint);font-size:14px;font-style:italic">Aucune note pour l'instant.</p>`
-    : withWhy.map(e => `<div class="note-item"><span class="note-emoji">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</span><div><div class="note-date">${formatDate(e.date, true)}</div><div class="note-text">« ${escapeHtml(e.why)} »</div></div></div>`).join('');
+    : withWhy.map(e => `<div class="note-item"><span class="note-emoji">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</span><div><div class="note-date">${formatDate(e.date, true)}</div><div class="note-text private-note">« ${escapeHtml(e.why)} »</div></div></div>`).join('');
 
   const pctGood30 = total30>0?Math.round(good30/total30*100):0;
   const pctNeutral30 = total30>0?Math.round(neutral30/total30*100):0;
@@ -1233,7 +1278,7 @@ function renderCalendar(year, month) {
       const cls=entry.good===true?'good-day':entry.good===false?'bad-day':'neutral-day';
       const starCls=entry.starred?' starred-day':'';
       const tipBase=entry.good===true?'✓ Bonne journée':entry.good===null?'○ Journée neutre':'✗ Journée difficile';
-      const tipText=(entry.why?'« '+entry.why+' »':tipBase)+(entry.starred?' ⭐':'');
+      const tipText=(entry.why&&!blurNotes?'« '+entry.why+' »':tipBase)+(entry.starred?' ⭐':'');
       cellsHTML+=`<div class="cal-cell ${cls}${starCls}${todayCls}" data-tip="${escapeHtml(tipText)}" onclick="openModal('${key}')">${d}${entry.starred?'<span class="cell-star">★</span>':''}</div>`;
     }
   }
@@ -1284,7 +1329,7 @@ function openModal(key) {
     <span class="modal-emoji">${entry.good===true?'☀️':entry.good===null?'🌤️':'🌧️'}</span>
     <div class="modal-date">${formatDate(key)}</div>
     <div class="modal-verdict ${entry.good===true?'good':entry.good===null?'neutral':'bad'}">${entry.good===true?'Belle journée':entry.good===null?'Journée neutre':'Journée difficile'}${entry.starred?' <span style="font-size:16px;filter:drop-shadow(0 0 5px var(--star-glow))">⭐</span>':''}</div>
-    ${entry.why?`<div class="modal-why ${entry.good===true?'good-border':entry.good===null?'neutral-border':'bad-border'}">« ${escapeHtml(entry.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic;margin-top:4px">Aucune note.</div>`}
+    ${entry.why?`<div class="modal-why private-note ${entry.good===true?'good-border':entry.good===null?'neutral-border':'bad-border'}">« ${escapeHtml(entry.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic;margin-top:4px">Aucune note.</div>`}
     <button class="edit-btn" style="margin-top:1rem" onclick="editDay('${key}')">Modifier</button>`;
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -1304,7 +1349,7 @@ function renderHistory() {
       <div class="entry-dot ${e.good===true?'good':e.good===null?'neutral':'bad'}">${e.good===true?'☀️':e.good===null?'🌤️':'🌧️'}</div>
       <div class="entry-body">
         <div class="entry-date">${formatDate(e.date)}</div>
-        ${e.why?`<div class="entry-why">« ${escapeHtml(e.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic">Aucune note</div>`}
+        ${e.why?`<div class="entry-why private-note">« ${escapeHtml(e.why)} »</div>`:`<div style="font-size:13px;color:var(--ink-faint);font-style:italic">Aucune note</div>`}
       </div>
     </div>`).join('');
   container.innerHTML=`
@@ -1465,6 +1510,7 @@ function parseImportFile(text) {
 // BOOT
 // ─────────────────────────────────────────────
 async function bootApp() {
+  syncBlurUI();
   document.getElementById('appShell').classList.add('visible');
   document.getElementById('todayLabel').textContent =
     new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
